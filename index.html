@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="theme-color" content="#f97316"/>
+<title>Tigers Message Bot</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --orange:#f97316;--orange-dark:#ea580c;--orange-light:#fff7ed;
+    --orange-border:#fed7aa;--bg:#fafaf9;--surface:#ffffff;
+    --border:#e7e5e4;--text:#1c1917;--muted:#78716c;
+    --success:#16a34a;--success-bg:#f0fdf4;--success-border:#86efac;
+    --radius:12px;--radius-sm:8px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+  .app-header{background:var(--orange);padding:16px 16px 12px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;}
+  .app-logo{width:36px;height:36px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+  .app-title{color:white;font-size:16px;font-weight:600;line-height:1.2;}
+  .app-subtitle{color:rgba(255,255,255,0.8);font-size:11px;}
+  .header-left{display:flex;align-items:center;gap:10px;}
+  .reset-btn{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;}
+  .nav-scroll{overflow-x:auto;background:white;border-bottom:1px solid var(--border);-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .nav-scroll::-webkit-scrollbar{display:none;}
+  .nav-tabs{display:flex;padding:0 8px;width:max-content;}
+  .nav-tab{padding:12px 14px;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;color:var(--muted);border:none;background:none;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.15s;}
+  .nav-tab.active{color:var(--orange);border-bottom-color:var(--orange);}
+  .content{padding:16px;max-width:600px;margin:0 auto;}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+  .form-group{margin-bottom:12px;}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+  label{display:block;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:5px;}
+  input,select,textarea{width:100%;padding:11px 12px;font-size:15px;font-family:'DM Sans',sans-serif;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);-webkit-appearance:none;appearance:none;outline:none;transition:border-color 0.15s,background 0.15s;}
+  input:focus,select:focus,textarea:focus{border-color:var(--orange);}
+  input.latched,select.latched,textarea.latched{border-color:var(--success-border);background:var(--success-bg);}
+  textarea{min-height:72px;resize:vertical;}
+  select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2378716c' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+  .hidden{display:none!important;}
+  .btn-generate{width:100%;padding:14px;background:var(--orange);color:white;border:none;border-radius:var(--radius);font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;margin:4px 0 16px;display:flex;align-items:center;justify-content:center;gap:8px;transition:background 0.15s;}
+  .btn-generate:active{background:var(--orange-dark);}
+  .btn-generate:disabled{opacity:0.6;}
+  .output-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-top:4px;}
+  .output-header{background:var(--orange-light);border-bottom:1px solid var(--orange-border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;}
+  .output-label{font-size:11px;font-weight:600;color:var(--orange-dark);letter-spacing:0.05em;text-transform:uppercase;}
+  .copy-btn{background:var(--orange);color:white;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;}
+  .copy-btn.copied{background:var(--success);}
+  .output-body{padding:14px;}
+  .output-hint{font-size:11px;color:var(--muted);margin-bottom:8px;}
+  .output-text{font-size:14px;line-height:1.7;white-space:pre-wrap;word-break:break-word;font-family:'DM Mono',monospace;}
+  .poll-preview{background:var(--orange-light);border:1px solid var(--orange-border);border-radius:var(--radius-sm);padding:12px 14px;font-size:14px;color:var(--text);margin-bottom:12px;line-height:1.6;}
+  .poll-label{font-size:11px;font-weight:600;color:var(--orange-dark);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;}
+  .pitch-info{background:#f0f9ff;border:1px solid #bae6fd;border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;color:#0c4a6e;margin-top:12px;line-height:1.6;}
+  .pitch-info strong{display:block;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;color:#0369a1;}
+  .preview-card{background:var(--surface);border:1.5px dashed var(--orange-border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+  .preview-header{background:var(--orange-light);border-bottom:1px solid var(--orange-border);padding:8px 14px;display:flex;align-items:center;justify-content:space-between;}
+  .preview-label{font-size:11px;font-weight:600;color:var(--orange-dark);letter-spacing:0.05em;text-transform:uppercase;}
+  .preview-body{padding:14px;}
+  .preview-hint{font-size:11px;color:var(--muted);margin-bottom:6px;}
+  .preview-text{font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:break-word;font-family:'DM Mono',monospace;color:var(--muted);min-height:40px;}
+  .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .shared-badge{display:inline-block;font-size:10px;font-weight:600;color:var(--orange-dark);background:var(--orange-light);border:1px solid var(--orange-border);border-radius:4px;padding:1px 5px;margin-left:4px;vertical-align:middle;letter-spacing:0.03em;}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="header-left">
+    <div class="app-logo">⚽</div>
+    <div>
+      <div class="app-title">Tigers Message Bot</div>
+      <div class="app-subtitle">Rugby Borough FC U7</div>
+    </div>
+  </div>
+  <button class="reset-btn" onclick="resetAll()">Reset</button>
+</div>
+
+<div class="nav-scroll">
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('match-parents')">Match → Parents</button>
+    <button class="nav-tab" onclick="switchTab('availability')">Availability</button>
+    <button class="nav-tab" onclick="switchTab('training')">Training</button>
+    <button class="nav-tab" onclick="switchTab('opposition')">Opposition</button>
+    <button class="nav-tab" onclick="switchTab('referee')">Referee</button>
+    <button class="nav-tab" onclick="switchTab('result')">Post-match</button>
+    <button class="nav-tab" onclick="switchTab('cancel')">Cancellation</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- MATCH PARENTS -->
+  <div id="tab-match-parents" class="tab-panel active">
+    <div class="form-row">
+      <div class="form-group"><label>Home or Away</label><select id="mp-homeaway"><option value="Home">Home</option><option value="Away">Away</option></select></div>
+      <div class="form-group"><label>Opposition <span class="shared-badge">shared</span></label><input id="f-opposition" type="text" placeholder="e.g. Coventry Sphinx"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Date <span class="shared-badge">shared</span></label><input id="f-date" type="date"/></div>
+      <div class="form-group"><label>Kick-off <span class="shared-badge">shared</span></label><input id="f-kickoff" type="time"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Meet-up time <span class="shared-badge">shared</span></label><input id="f-meetup" type="time"/></div>
+      <div class="form-group"><label>Pitch number <span class="shared-badge">shared</span></label><input id="f-pitchnum" type="text" placeholder="e.g. Pitch 1"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Pitch type <span class="shared-badge">shared</span></label><input id="f-pitchtype" type="text" placeholder="e.g. 3G, Grass"/></div>
+      <div></div>
+    </div>
+    <div class="form-group" id="mp-venue-wrap"><label>Venue / address</label><input id="mp-venue" type="text" placeholder="e.g. Butlin Road Rec Ground, Rugby"/></div>
+    <div class="form-group hidden" id="mp-gmaps-wrap"><label>Google Maps link (away)</label><input id="mp-gmaps" type="text" placeholder="https://maps.google.com/..."/></div>
+    <div class="form-group"><label>Additional note (optional)</label><textarea id="mp-note" placeholder="e.g. Bring extra layers..."></textarea></div>
+    <div class="preview-card" id="preview-match-parents">
+      <div class="preview-header"><span class="preview-label">Live preview</span></div>
+      <div class="preview-body"><div class="preview-hint">*asterisks* = bold in WhatsApp</div><div class="preview-text" id="ptxt-match-parents">Fill in the fields above to see a preview.</div></div>
+    </div>
+        <button class="btn-generate" onclick="generate('match-parents')">Generate message</button>
+    <div class="output-card hidden" id="out-match-parents">
+      <div class="output-header"><span class="output-label">Ready to send</span><button class="copy-btn" onclick="copyMsg('match-parents')">Copy</button></div>
+      <div class="output-body"><div class="output-hint">*asterisks* = bold in WhatsApp</div><div class="output-text" id="txt-match-parents"></div></div>
+    </div>
+  </div>
+
+  <!-- AVAILABILITY -->
+  <div id="tab-availability" class="tab-panel">
+    <div class="form-row">
+      <div class="form-group"><label>Match date <span class="shared-badge">shared</span></label><input id="av-date" type="date"/></div>
+      <div class="form-group"><label>Greeting</label>
+        <select id="av-greeting">
+          <option value="auto">Auto-detect</option>
+          <option value="Good morning">Good morning</option>
+          <option value="Good afternoon">Good afternoon</option>
+          <option value="Good evening">Good evening</option>
+        </select>
+      </div>
+    </div>
+    <div class="poll-label">Preview</div>
+    <div class="poll-preview" id="poll-preview">Fill in the date above to preview.</div>
+    <div class="preview-card" id="preview-availability">
+      <div class="preview-header"><span class="preview-label">Live preview</span></div>
+      <div class="preview-body"><div class="preview-hint">Preview updates as you fill in the date</div><div class="preview-text" id="ptxt-availability">Fill in the fields above to see a preview.</div></div>
+    </div>
+        <button class="btn-generate" onclick="generate('availability')">Generate message</button>
+    <div class="output-card hidden" id="out-availability">
+      <div class="output-header"><span class="output-label">Ready to send</span><button class="copy-btn" onclick="copyMsg('availability')">Copy</button></div>
+      <div class="output-body"><div class="output-hint">Then use WhatsApp's Poll: ✅ Available / ❌ Not available</div><div class="output-text" id="txt-availability"></div></div>
+    </div>
+  </div>
+
+  <!-- TRAINING -->
+  <div id="tab-training" class="tab-panel">
+    <div class="form-row">
+      <div class="form-group"><label>Date</label><input id="tr-date" type="date"/></div>
+      <div class="form-group"><label>Start time</label><input id="tr-start" type="time"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>End time</label><input id="tr-end" type="time"/></div>
+      <div class="form-group"><label>Pitch type</label><input id="tr-pitch" type="text" placeholder="e.g. 3G, Grass"/></div>
+    </div>
+    <div class="form-group"><label>Venue</label><input id="tr-venue" type="text" placeholder="e.g. Butlin Road Rec Ground"/></div>
+    <div class="form-group"><label>What to bring</label><input id="tr-bring" type="text" placeholder="e.g. Shin guards, boots, water bottle"/></div>
+    <div class="form-group"><label>Additional note (optional)</label><textarea id="tr-note" placeholder="e.g. Passing drills this week..."></textarea></div>
+    <div class="preview-card" id="preview-training">
+      <div class="preview-header"><span class="preview-label">Live preview</span></div>
+      <div class="preview-body"><div class="preview-hint">*asterisks* = bold in WhatsApp</div><div class="preview-text" id="ptxt-training">Fill in the fields above to see a preview.</div></div>
+    </div>
+        <button class="btn-generate" onclick="generate('training')">Generate message</button>
+    <div class="output-card hidden" id="out-training">
+      <div class="output-header"><span class="output-label">Ready to send</span><button class="copy-btn" onclick="copyMsg('training')">Copy</button></div>
+      <div class="output-body"><div class="output-hint">*asterisks* = bold in WhatsApp</div><div class="output-text" id="txt-training"></div></div>
+    </div>
+  </div>
+
+  <!-- OPPOSITION -->
+  <div id="tab-opposition" class="tab-panel">
+    <div class="form-row">
+      <div class="form-group"><label>Manager name</label><input id="op-name" type="text" placeholder="e.g. James"/></div>
+      <div class="form-group"><label>Opposition <span class="shared-badge">shared</span></label><input id="op-opposition-mirror" type="text" placeholder="e.g. Coventry Sphinx"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Date <span class="shared-badge">shared</span></label><input id="op-date-mirror" type="date"/></div>
+      <div class="form-group"><label>Kick-off <span class="shared-badge">shared</span></label><input id="op-kickoff-mirror" type="time"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Meet-up time <span class="shared-badge">shared</span></label><input id="op-meetup-mirror" type="time"/></div>
+      <div class="form-group"><label>Pitch number <span class="shared-badge">shared</span></label><input id="op-pitchnum-mirror" type="text" placeholder="e.g. Pitch 1"/></div>
+    </div>
+    <div class="form-group"><label>Pitch type <span class="shared-badge">shared</span></label><input id="op-pitchtype-mirror" type="text" placeholder="e.g. 3G, Grass"/></div>
+    <div class="form-group"><label>Additional note (optional)</label><textarea id="op-note" placeholder="e.g. Parking on-site..."></textarea></div>
+    <div class="preview-card" id="preview-opposition">
+      <div class="preview-header"><span class="preview-label">Live preview</span></div>
+      <div class="preview-body"><div class="preview-hint">*asterisks* = bold — attach pitch map too</div><div class="preview-text" id="ptxt-opposition">Fill in the fields above to see a preview.</div></div>
+    </div>
+        <button class="btn-generate" onclick="generate('opposition')">Generate message</button>
+    <div class="output-card hidden" id="out-opposition">
+      <div class="output-header"><span class="output-label">Ready to send</span><button class="copy-btn" onclick="copyMsg('opposition')">Copy</button></div>
+      <div class="output-body"><div class="output-hint">*asterisks* = bold — attach pitch map too</div><div class="output-text" id="txt-opposition"></div></div>
+    </div>
+    <div class="pitch-info">
+      <strong>Pitch map reminder</strong>
+      Nationwide Windows Arena, Kilsby Lane, Rugby CV21 4PN<br/>
+      SF1 — Pitches 1,2,3 (3G) · LC1 — Pitches 7,8,9 (3G) · SF3 — Pitches 10,11,12 (3G)
+    </div>
+  </div>
+
+  <!-- REFEREE -->
+  <div id="tab-referee" class="tab-panel">
+    <div class="form-row">
+      <div class="form-group"><label>Date <span class="shared-badge">shared</span></label><input id="ref-date-mirror" type="date"/></div>
+      <div class="form-group"><label>Kick-off <span class="shared-badge">shared</span></label><input id="ref-kickoff-mirror" type="time"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Pitch number <span class="shared-badge">shared</span></label><input id="ref-pitchnum-mirror" type="text" placeholder="e.g. Pitch 1"/></div>
+      <div class="form-group"><label>Pitch type <span class="shared-badge">shared</span></label><input id="ref-pitchtype-mirror" type="text" placeholder="e.g. 3G"/></div>
+    </div>
+    <div class="preview-card" id="preview-referee">
+      <div class="preview-header"><span class="preview-label">Live preview</span></div>
+      <div class="preview-body"><div class="preview-hint">Clean template format</div><div class="preview-text" id="ptxt-referee">Fill in the fields above to see a preview.</div></div>
+    </div>
+        <button class="btn-generate" onclick="generate('referee')">Generate message</button>
+    <div class="output-card hidden" id="out-referee">
+      <div class="output-header"><span class="output-label">Ready to send</span><button class="copy-btn" onclick="copyMsg('referee')">Copy</button></div>
+      <div class="output-body"><div class="output-text" id="txt-referee"></div></div>
+    </div>
+  </div>
+
+  <!-- POST-MATCH -->
+  <div id="tab-result" class="tab-panel">
+    <div class="form-row">
+      <div class="form-group"><label>Opposition <span class="shared-badge">shared</span></label><input id="res-opposition-mirror" type="text" placeholder="e.g. Coventry Sphinx"/></div>
+      <div class="form-group"><label>Result</label><select id="res-result"><option value="win">Win</option><option value="loss">Loss</option><option value="draw">Draw</option></select></div>
+    </div>
+    <div class="form-group"><label>Man of the match (optional)</label><input id="res-motm" type="text" placeholder="e.g. Jamie"/></div>
+    <div class="form-group"><label>How did the team play?</label><textarea id="res-notes" placeholder="e.g. Great energy, improved passing..."></textarea></div>
+    <div class="preview-card" id="preview-result">
+      <div class="preview-header"><span class="preview-label">Live preview</span></div>
+      <div class="preview-body"><div class="preview-hint">Message updates with your inputs</div><div class="preview-text" id="ptxt-result">Fill in the fields above to see a preview.</div></div>
+    </div>
+        <button class="btn-generate" id="btn-result" onclick="generate('result')">Generate message</button>
+    <div class="output-card hidden" id="out-result">
+      <div class="output-header"><span class="output-label">AI generated</span><button class="copy-btn" onclick="copyMsg('result')">Copy</button></div>
+      <div class="output-body"><div class="output-text" id="txt-result"></div></div>
+    </div>
+  </div>
+
+  <!-- CANCELLATION -->
+  <div id="tab-cancel" class="tab-panel">
+    <div class="form-row">
+      <div class="form-group"><label>Type</label><select id="can-type"><option value="match">Match</option><option value="training">Training</option></select></div>
+      <div class="form-group"><label>Date <span class="shared-badge">shared</span></label><input id="can-date-mirror" type="date"/></div>
+    </div>
+    <div class="form-group"><label>Reason</label><input id="can-reason" type="text" placeholder="e.g. Waterlogged pitch..."/></div>
+    <div class="form-group"><label>Rescheduled? (optional)</label><input id="can-reschedule" type="text" placeholder="e.g. New date TBC / Rescheduled to 12 Apr"/></div>
+    <div class="preview-card" id="preview-cancel">
+      <div class="preview-header"><span class="preview-label">Live preview</span></div>
+      <div class="preview-body"><div class="preview-hint">*asterisks* = bold in WhatsApp</div><div class="preview-text" id="ptxt-cancel">Fill in the fields above to see a preview.</div></div>
+    </div>
+        <button class="btn-generate" onclick="generate('cancel')">Generate message</button>
+    <div class="output-card hidden" id="out-cancel">
+      <div class="output-header"><span class="output-label">Ready to send</span><button class="copy-btn" onclick="copyMsg('cancel')">Copy</button></div>
+      <div class="output-body"><div class="output-text" id="txt-cancel"></div></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const STORE_KEY = 'rbt_v9';
+const TABS = ['match-parents','availability','training','opposition','referee','result','cancel'];
+const b = v => v ? '*' + v + '*' : '';
+
+// ── Shared field map: canonical key -> all mirror element IDs ───────────────
+// When any mirror changes, all others sync and STATE[canonicalKey] updates
+const SHARED = {
+  'f-date':     ['f-date','av-date','op-date-mirror','ref-date-mirror','can-date-mirror'],
+  'f-kickoff':  ['f-kickoff','op-kickoff-mirror','ref-kickoff-mirror'],
+  'f-meetup':   ['f-meetup','op-meetup-mirror'],
+  'f-opposition':['f-opposition','op-opposition-mirror','res-opposition-mirror'],
+  'f-pitchnum': ['f-pitchnum','op-pitchnum-mirror','ref-pitchnum-mirror'],
+  'f-pitchtype':['f-pitchtype','op-pitchtype-mirror','ref-pitchtype-mirror'],
+};
+
+// Reverse map: elementId -> canonicalKey
+const MIRROR_TO_CANONICAL = {};
+Object.entries(SHARED).forEach(([canon, mirrors]) => {
+  mirrors.forEach(m => { MIRROR_TO_CANONICAL[m] = canon; });
+});
+
+// ── STATE — load immediately from localStorage ───────────────────────────────
+let STATE = {};
+try { STATE = JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); } catch(e) { STATE = {}; }
+
+// ── Boot ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  wireAllFields();
+  restoreAllFields();
+  updateAwayToggle();
+  updatePollPreview();
+});
+
+// ── Wire all field events ────────────────────────────────────────────────────
+function wireAllFields() {
+  document.querySelectorAll('input[id],select[id],textarea[id]').forEach(el => {
+    ['input','change'].forEach(evt => {
+      el.addEventListener(evt, function() {
+        const canon = MIRROR_TO_CANONICAL[this.id];
+        if (canon) {
+          // Shared field — update STATE and sync all mirrors
+          STATE[canon] = this.value;
+          syncMirrors(canon, this.value);
+        } else {
+          // Non-shared field — just update STATE
+          STATE[this.id] = this.value;
+        }
+        persist();
+        updateLatch(this);
+        if (this.id === 'mp-homeaway') updateAwayToggle();
+        if (canon === 'f-date' || this.id === 'av-greeting') updatePollPreview();
+        updateActivePreview();
+      });
+    });
+  });
+}
+
+// Sync all mirror elements for a canonical key
+function syncMirrors(canonKey, value) {
+  (SHARED[canonKey] || []).forEach(mirrorId => {
+    const el = document.getElementById(mirrorId);
+    if (el) {
+      el.value = value;
+      updateLatch(el);
+    }
+  });
+}
+
+// ── Restore all fields from STATE ────────────────────────────────────────────
+function restoreAllFields() {
+  // First restore shared fields — syncs all mirrors at once
+  Object.keys(SHARED).forEach(canon => {
+    const val = STATE[canon];
+    if (val !== undefined && val !== '') {
+      syncMirrors(canon, val);
+    }
+  });
+  // Then restore non-shared fields
+  document.querySelectorAll('input[id],select[id],textarea[id]').forEach(el => {
+    if (MIRROR_TO_CANONICAL[el.id]) return; // already handled above
+    const val = STATE[el.id];
+    if (val !== undefined && val !== '') {
+      el.value = val;
+      updateLatch(el);
+    }
+  });
+  updateAllPreviews();
+}
+
+function persist() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(STATE)); } catch(e) {}
+}
+
+function updateLatch(el) {
+  el.classList.toggle('latched', el.value !== null && el.value.trim() !== '');
+}
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function switchTab(id) {
+  TABS.forEach(t => { document.getElementById('tab-'+t)?.classList.remove('active'); });
+  document.getElementById('tab-'+id)?.classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(el => {
+    el.classList.toggle('active', el.getAttribute('onclick') === "switchTab('"+id+"')");
+  });
+  const activeTab = document.querySelector('.nav-tab.active');
+  if (activeTab) activeTab.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+  updatePreview(id);
+}
+
+// ── Reset ─────────────────────────────────────────────────────────────────────
+function resetAll() {
+  if (!confirm('Clear all saved inputs?')) return;
+  STATE = {};
+  try { localStorage.removeItem(STORE_KEY); } catch(e) {}
+  document.querySelectorAll('input[id],select[id],textarea[id]').forEach(el => {
+    el.value = el.tagName === 'SELECT' ? (el.options[0]?.value || '') : '';
+    el.classList.remove('latched');
+  });
+  TABS.forEach(t => { const o = document.getElementById('out-'+t); if(o) o.classList.add('hidden'); });
+  updateAwayToggle();
+  updatePollPreview();
+}
+
+// ── Away toggle ───────────────────────────────────────────────────────────────
+function updateAwayToggle() {
+  const away = (STATE['mp-homeaway'] || 'Home') === 'Away';
+  document.getElementById('mp-gmaps-wrap')?.classList.toggle('hidden', !away);
+}
+
+// ── Poll preview ──────────────────────────────────────────────────────────────
+function getGreeting() {
+  const v = STATE['av-greeting'] || 'auto';
+  if (v !== 'auto') return v;
+  const h = new Date().getHours();
+  return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+}
+function fmtOrdinal(d) {
+  if (!d) return '';
+  const [y,m,day] = d.split('-');
+  const dN=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const mN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const dt = new Date(+y,+m-1,+day);
+  const n=+day, s=n===1||n===21||n===31?'st':n===2||n===22?'nd':n===3||n===23?'rd':'th';
+  return dN[dt.getDay()]+' '+n+s+' '+mN[+m-1];
+}
+function updatePollPreview() {
+  const el = document.getElementById('poll-preview'); if(!el) return;
+  const d = STATE['f-date'] || '';
+  if (!d) { el.textContent = 'Fill in the date above to preview.'; return; }
+  el.textContent = getGreeting()+' all, please can you confirm your availability for the match on *'+fmtOrdinal(d)+'*. Thanks';
+}
+
+// ── Formatters ────────────────────────────────────────────────────────────────
+function fmtShort(d) { if(!d) return ''; const [y,m,day]=d.split('-'); return day+'/'+m+'/'+y; }
+function fmtLong(d) {
+  if(!d) return '';
+  const [y,m,day]=d.split('-');
+  const dN=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const mN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dt=new Date(+y,+m-1,+day);
+  return dN[dt.getDay()]+' '+(+day)+' '+mN[+m-1]+' '+y;
+}
+function fmtTime(t) {
+  if(!t) return '';
+  const [h,m]=t.split(':');
+  const hr=+h,ampm=hr>=12?'pm':'am',hr12=hr%12||12;
+  return hr12+':'+m+ampm;
+}
+// Read from STATE — shared fields use canonical key, others use element id
+function g(id) {
+  const canon = MIRROR_TO_CANONICAL[id];
+  return STATE[canon || id] || '';
+}
+
+// ── Message builders ──────────────────────────────────────────────────────────
+function buildMatchParents() {
+  const ha=g('mp-homeaway')||'Home', opp=g('f-opposition')||'[Opposition]';
+  const date=fmtShort(g('f-date')), ko=fmtTime(g('f-kickoff')), mu=fmtTime(g('f-meetup'));
+  const pn=g('f-pitchnum'), pt=g('f-pitchtype'), venue=g('mp-venue')||'[Venue]';
+  const gmaps=g('mp-gmaps'), note=g('mp-note');
+  const fix=ha==='Home'?'Rugby Borough Tigers vs '+opp:opp+' vs Rugby Borough Tigers';
+  let msg='📢 '+ha.toUpperCase()+' MATCH INTIMATION 📢\n'+b(fix)+'\nDate - '+b(date)+'\nKick off - '+b(ko)+'\nMeet Up Time - '+b(mu);
+  if(pn) msg+='\nPitch - '+b(pn);
+  if(pt) msg+='\nPitch Type - '+b(pt);
+  msg+='\nVenue - '+b(venue)+'\n\n*MATCH KIT, SHIN GUARDS AND FOOTBALL SHOES ARE A MUST*';
+  if(note) msg+='\n\n'+note;
+  if(ha==='Away'&&gmaps) msg+='\nAddress Link - '+gmaps;
+  msg+='\n\nPlease Arrive by '+b(mu)+' so we have time to Warmup.\n\nAny questions please let me know.\nThanks\nAshwin ☺️';
+  return msg;
+}
+function buildAvailability() {
+  return getGreeting()+' all, please can you confirm your availability for the match on *'+fmtOrdinal(g('f-date'))+'*. Thanks';
+}
+function buildTraining() {
+  const date=fmtShort(g('tr-date')), s=fmtTime(g('tr-start')), e=fmtTime(g('tr-end'));
+  const venue=g('tr-venue')||'[Venue]', pt=g('tr-pitch');
+  const bring=g('tr-bring')||'shin guards, boots and water bottle', note=g('tr-note');
+  let msg='🏃 TRAINING SESSION 🏃\nDate - '+b(date)+'\nTime - '+b(s+' – '+e)+'\nVenue - '+b(venue);
+  if(pt) msg+='\nPitch Type - '+b(pt);
+  msg+='\n\nPlease bring: '+b(bring);
+  if(note) msg+='\n\n'+note;
+  msg+='\n\nAny questions please let me know.\nThanks\nAshwin ☺️';
+  return msg;
+}
+function buildOpposition() {
+  const name=g('op-name'), opp=g('f-opposition')||'[Opposition]';
+  const date=g('f-date'), ko=fmtTime(g('f-kickoff')), mu=fmtTime(g('f-meetup'));
+  const pn=g('f-pitchnum'), pt=g('f-pitchtype')||'[Type]', note=g('op-note');
+  const greeting=name?'Hi '+name+',':'Hi,';
+  let msg=greeting+'\nMatch details for '+b(fmtLong(date))+' - '+b('Rugby Borough Tigers vs '+opp)+'.\n\nDate - '+b(fmtShort(date))+'\nKick off - '+b(ko)+'\nMeet Up Time - '+b(mu);
+  if(pn) msg+='\nPitch - '+b(pn);
+  msg+='\nPitch Type - '+b(pt);
+  msg+='\n\nThe address is:\nRugby Borough Football Club\nKilsby Lane\nRugby\nCV21 4PN';
+  msg+='\n\nWe play in *orange tops and white shorts*.\n\nThe pitch allocated is a '+b(pt)+' pitch.\n\n*No dogs are allowed on site.*';
+  if(note) msg+='\n\n'+note;
+  msg+='\n\nI\'ll send over the pitch map too so you can find us easily.\n\nAny questions please let me know.\nThanks,\nAshwin';
+  return msg;
+}
+function buildReferee() {
+  const date=g('f-date'), ko=fmtTime(g('f-kickoff'));
+  const pn=g('f-pitchnum')||'[Pitch TBC]', pt=g('f-pitchtype');
+  let msg='U7 Tigers\n5v5\n'+b(fmtLong(date))+'\n'+b(ko)+'\n'+b(pn);
+  if(pt) msg+=' ('+pt+')';
+  msg+='\n*£20*';
+  return msg;
+}
+function buildCancel() {
+  const type=g('can-type')||'match', date=fmtShort(g('f-date'));
+  const reason=g('can-reason')||'unforeseen circumstances', reschedule=g('can-reschedule');
+  let msg='❌ *'+(type==='match'?'MATCH':'TRAINING')+' CANCELLATION* ❌\n\nUnfortunately the '+type+' scheduled for '+b(date)+' has been cancelled.\nReason: '+b(reason);
+  if(reschedule) msg+='\n\n'+reschedule;
+  msg+='\n\nSorry for any inconvenience — I\'ll keep you updated.\nAny questions please let me know.\nThanks\nAshwin ☺️';
+  return msg;
+}
+
+// ── Preview ───────────────────────────────────────────────────────────────────
+const BUILDERS = {
+  'match-parents': ()=>buildMatchParents(),
+  'availability':  ()=>buildAvailability(),
+  'training':      ()=>buildTraining(),
+  'opposition':    ()=>buildOpposition(),
+  'referee':       ()=>buildReferee(),
+  'result':        ()=>buildResult(),
+  'cancel':        ()=>buildCancel(),
+};
+
+function updatePreview(tid) {
+  const el = document.getElementById('ptxt-'+tid);
+  if (!el) return;
+  try {
+    const msg = BUILDERS[tid]();
+    el.textContent = msg || 'Fill in the fields above to see a preview.';
+    el.style.color = msg ? 'var(--text)' : 'var(--muted)';
+  } catch(e) { el.textContent = 'Fill in the fields above to see a preview.'; }
+}
+
+function updateAllPreviews() {
+  TABS.forEach(t => updatePreview(t));
+}
+
+function updateActivePreview() {
+  const active = document.querySelector('.tab-panel.active');
+  if (!active) return;
+  const tid = active.id.replace('tab-','');
+  updatePreview(tid);
+}
+
+// ── Post-match builder ────────────────────────────────────────────────────────
+function buildResult() {
+  const opp=g('f-opposition')||'the opposition';
+  const result=g('res-result')||'win';
+  const motm=g('res-motm');
+  const notes=g('res-notes');
+  const winLines=[
+    'What a day for the Tigers! The lads gave everything and came away with a brilliant result against *'+opp+'*.',
+    'Fantastic effort from every single one of them today against *'+opp+'* — they worked so hard and it really showed.',
+    'So proud of the boys today — they played with great energy and heart from start to finish against *'+opp+'*.',
+  ];
+  const drawLines=[
+    'A good battle today against *'+opp+'* — the Tigers showed real character and kept fighting throughout.',
+    'Solid effort from the Tigers against *'+opp+'* — they gave everything and showed great teamwork.',
+    'A tough match against *'+opp+'* but the boys did themselves proud — fantastic attitude all round.',
+  ];
+  const lossLines=[
+    "It wasn't our day today against *"+opp+"* but the Tigers never stopped trying — so proud of their effort.",
+    "A tough one against *"+opp+"* but the boys gave 100% from first whistle to last — that's all we can ask for.",
+    "Results like this are part of the journey — the Tigers showed great spirit against *"+opp+"* and we'll come back stronger.",
+  ];
+  const pool=result==='win'?winLines:result==='draw'?drawLines:lossLines;
+  const headline=pool[Math.floor(Math.random()*pool.length)];
+  const emoji=result==='win'?'🏆':result==='draw'?'🤝':'💪';
+  let msg='⚽ *MATCH REPORT — vs '+opp+'* ⚽\n\n'+emoji+' '+headline+'\n\n';
+  if(notes&&notes.trim()) msg+=notes.trim()+'\n\n';
+  if(motm) msg+='🌟 *Man of the Match: '+motm+'* — outstanding today!\n\n';
+  msg+='Thank you all for your amazing support on the sidelines — it means everything to the boys!\nThanks\nAshwin ☺️';
+  return msg;
+}
+
+// ── Generate ──────────────────────────────────────────────────────────────────
+function generate(type) {
+  const out=document.getElementById('out-'+type);
+  const txt=document.getElementById('txt-'+type);
+  out.classList.remove('hidden');
+  const msg=type==='match-parents'?buildMatchParents():type==='availability'?buildAvailability():type==='training'?buildTraining():type==='opposition'?buildOpposition():type==='referee'?buildReferee():type==='result'?buildResult():buildCancel();
+  txt.textContent=msg;
+}
+
+// ── Copy ──────────────────────────────────────────────────────────────────────
+function copyMsg(type) {
+  const txt=document.getElementById('txt-'+type)?.textContent; if(!txt) return;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn=document.querySelector('#out-'+type+' .copy-btn');
+    if(btn){btn.textContent='Copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},2000);}
+  });
+}
+</script>
+</body>
+</html>
