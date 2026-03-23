@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="theme-color" content="#f97316"/>
+<title>Tigers Message Bot</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap" rel="stylesheet"/>
+<!-- SheetJS for Excel export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --orange:#f97316;--orange-dark:#ea580c;--orange-light:#fff7ed;
+    --orange-border:#fed7aa;--bg:#fafaf9;--surface:#ffffff;
+    --border:#e7e5e4;--text:#1c1917;--muted:#78716c;
+    --success:#16a34a;--success-bg:#f0fdf4;--success-border:#86efac;
+    --radius:12px;--radius-sm:8px;
+    --navy:#1c1917;--red:#ef4444;--red-light:#fef2f2;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+  .app-header{background:var(--orange);padding:16px 16px 12px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;}
+  .app-logo{width:36px;height:36px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+  .app-title{color:white;font-size:16px;font-weight:600;line-height:1.2;}
+  .app-subtitle{color:rgba(255,255,255,0.8);font-size:11px;}
+  .header-left{display:flex;align-items:center;gap:10px;}
+  .reset-btn{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;}
+  .nav-scroll{overflow-x:auto;background:white;border-bottom:1px solid var(--border);-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .nav-scroll::-webkit-scrollbar{display:none;}
+  .nav-tabs{display:flex;padding:0 8px;width:max-content;}
+  .nav-tab{padding:12px 14px;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;color:var(--muted);border:none;background:none;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.15s;}
+  .nav-tab.active{color:var(--orange);border-bottom-color:var(--orange);}
+  .content{padding:16px;max-width:600px;margin:0 auto;}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+  .form-group{margin-bottom:12px;}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+  label{display:block;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:5px;}
+  input,select,textarea{width:100%;padding:11px 12px;font-size:15px;font-family:'DM Sans',sans-serif;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);-webkit-appearance:none;appearance:none;outline:none;transition:border-color 0.15s,background 0.15s;}
+  input:focus,select:focus,textarea:focus{border-color:var(--orange);}
+  input.latched,select.latched,textarea.latched{border-color:var(--success-border);background:var(--success-bg);}
+  textarea{min-height:72px;resize:vertical;}
+  select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2378716c' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+  .hidden{display:none!important;}
+  .btn-generate{width:100%;padding:14px;background:var(--orange);color:white;border:none;border-radius:var(--radius);font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;margin:4px 0 16px;display:flex;align-items:center;justify-content:center;gap:8px;transition:background 0.15s;}
+  .btn-generate:active{background:var(--orange-dark);}
+  .btn-generate:disabled{opacity:0.6;}
+  .output-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-top:4px;}
+  .output-header{background:var(--orange-light);border-bottom:1px solid var(--orange-border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;}
+  .output-label{font-size:11px;font-weight:600;color:var(--orange-dark);letter-spacing:0.05em;text-transform:uppercase;}
+  .copy-btn{background:var(--orange);color:white;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;}
+  .copy-btn.copied{background:var(--success);}
+  .output-body{padding:14px;}
+  .output-hint{font-size:11px;color:var(--muted);margin-bottom:8px;}
+  .output-text{font-size:14px;line-height:1.7;white-space:pre-wrap;word-break:break-word;font-family:'DM Mono',monospace;}
+  .poll-preview{background:var(--orange-light);border:1px solid var(--orange-border);border-radius:var(--radius-sm);padding:12px 14px;font-size:14px;color:var(--text);margin-bottom:12px;line-height:1.6;}
+  .poll-label{font-size:11px;font-weight:600;color:var(--orange-dark);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;}
+  .pitch-info{background:#f0f9ff;border:1px solid #bae6fd;border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;color:#0c4a6e;margin-top:12px;line-height:1.6;}
+  .pitch-info strong{display:block;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;color:#0369a1;}
+  .preview-card{background:var(--surface);border:1.5px dashed var(--orange-border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+  .preview-header{background:var(--orange-light);border-bottom:1px solid var(--orange-border);padding:8px 14px;display:flex;align-items:center;justify-content:space-between;}
+  .preview-label{font-size:11px;font-weight:600;color:var(--orange-dark);letter-spacing:0.05em;text-transform:uppercase;}
+  .preview-body{padding:14px;}
+  .preview-hint{font-size:11px;color:var(--muted);margin-bottom:6px;}
+  .preview-text{font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:break-word;font-family:'DM Mono',monospace;color:var(--muted);min-height:40px;}
+  .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .mode-toggle{display:flex;align-items:center;gap:0;background:var(--bg);border:1.5px solid var(--border);border-radius:20px;padding:3px;margin-bottom:16px;width:fit-content;}
+  .mode-btn{padding:6px 16px;border-radius:16px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:all 0.15s;}
+  .mode-btn.active{background:var(--orange);color:white;}
+  .shared-badge{display:inline-block;font-size:10px;font-weight:600;color:var(--orange-dark);background:var(--orange-light);border:1px solid var(--orange-border);border-radius:4px;padding:1px 5px;margin-left:4px;vertical-align:middle;letter-spacing:0.03em;}
+
+  /* ── ACCOUNTS TAB STYLES ── */
+  .acc-section-title{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin:20px 0 10px;padding-bottom:6px;border-bottom:1.5px solid var(--border);}
+  .acc-section-title:first-child{margin-top:0;}
+  .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+  .kpi-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:14px 14px 12px;position:relative;overflow:hidden;}
+  .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+  .kpi-card.green::before{background:var(--success);}
+  .kpi-card.orange::before{background:var(--orange);}
+  .kpi-card.red::before{background:var(--red);}
+  .kpi-card.navy::before{background:var(--navy);}
+  .kpi-label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;}
+  .kpi-value{font-size:22px;font-weight:600;color:var(--text);font-family:'DM Mono',monospace;}
+  .kpi-value.green{color:var(--success);}
+  .kpi-value.orange{color:var(--orange-dark);}
+  .kpi-value.red{color:var(--red);}
+
+  /* Entry form */
+  .acc-form{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:16px;}
+  .acc-form-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+  .btn-add{width:100%;padding:12px;background:var(--orange);color:white;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:background 0.15s;}
+  .btn-add:active{background:var(--orange-dark);}
+  .btn-secondary{padding:8px 14px;background:transparent;color:var(--orange);border:1.5px solid var(--orange-border);border-radius:var(--radius-sm);font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;}
+  .btn-danger{padding:8px 14px;background:transparent;color:var(--red);border:1.5px solid #fecaca;border-radius:var(--radius-sm);font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;}
+  .btn-export{width:100%;padding:13px;background:var(--navy);color:white;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;transition:background 0.15s;}
+  .btn-export:active{background:#374151;}
+
+  /* Ledger table */
+  .ledger-wrap{overflow-x:auto;border-radius:var(--radius);border:1.5px solid var(--border);margin-bottom:16px;}
+  table.ledger{width:100%;border-collapse:collapse;font-size:13px;min-width:460px;}
+  table.ledger th{background:var(--navy);color:white;padding:9px 10px;text-align:left;font-size:10px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;}
+  table.ledger td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  table.ledger tr:last-child td{border-bottom:none;}
+  table.ledger tr:nth-child(even) td{background:#fafaf9;}
+  .tag{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;white-space:nowrap;}
+  .tag-in{background:var(--success-bg);color:var(--success);border:1px solid var(--success-border);}
+  .tag-out{background:var(--red-light);color:var(--red);border:1px solid #fecaca;}
+  .tag-cash{background:var(--orange-light);color:var(--orange-dark);border:1px solid var(--orange-border);}
+  .tag-bank{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;}
+  .del-row{background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;padding:2px 4px;border-radius:4px;line-height:1;}
+  .del-row:hover{color:var(--red);background:var(--red-light);}
+  .empty-state{text-align:center;color:var(--muted);font-size:13px;padding:24px 16px;}
+
+  /* Player status */
+  .player-grid{display:grid;gap:8px;margin-bottom:16px;}
+  .player-row{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;}
+  .player-name{font-size:14px;font-weight:500;}
+  .player-meta{font-size:12px;color:var(--muted);}
+  .player-total{font-size:14px;font-weight:600;font-family:'DM Mono',monospace;}
+  .player-total.paid{color:var(--success);}
+  .player-total.unpaid{color:var(--muted);}
+  .badge-paid{display:inline-block;background:var(--success-bg);color:var(--success);border:1px solid var(--success-border);font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;}
+  .badge-unpaid{display:inline-block;background:var(--red-light);color:var(--red);border:1px solid #fecaca;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;}
+
+  .acc-actions{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:white;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:opacity 0.25s;pointer-events:none;}
+  .toast.show{opacity:1;}
+
+  /* Payment requests */
+  .req-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;}
+  .req-card.complete{opacity:0.65;}
+  .req-header{background:var(--orange-light);border-bottom:1px solid var(--orange-border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .req-title{font-size:13px;font-weight:600;color:var(--text);}
+  .req-meta{font-size:11px;color:var(--muted);margin-top:1px;}
+  .req-amount{font-size:13px;font-weight:600;font-family:'DM Mono',monospace;color:var(--orange-dark);white-space:nowrap;}
+  .req-progress{height:3px;background:var(--border);}
+  .req-progress-bar{height:100%;background:var(--success);transition:width 0.3s;}
+  .req-players{padding:10px 14px;display:grid;gap:6px;}
+  .req-player-row{display:flex;align-items:center;gap:8px;}
+  .req-player-row input[type=checkbox]{width:18px;height:18px;flex-shrink:0;accent-color:var(--orange);cursor:pointer;}
+  .req-player-row input[type=date]{flex:1;padding:6px 8px;font-size:12px;border:1.5px solid var(--border);border-radius:6px;}
+  .req-player-row input[type=date]:disabled{opacity:0.4;background:var(--bg);}
+  .req-player-name{font-size:13px;min-width:90px;}
+  .req-player-name.collected{color:var(--success);font-weight:600;}
+  .req-player-name.excluded{color:var(--muted);text-decoration:line-through;}
+  .req-footer{padding:8px 14px;display:flex;justify-content:flex-end;border-top:1px solid var(--border);}
+  .complete-badge{font-size:10px;font-weight:600;background:var(--success-bg);color:var(--success);border:1px solid var(--success-border);padding:2px 8px;border-radius:10px;}
+
+  /* Inline player name edit */
+  .player-name-display{font-size:14px;font-weight:500;cursor:pointer;border-bottom:1px dashed var(--border);padding-bottom:1px;}
+  .player-name-display:hover{color:var(--orange);}
+  .player-name-input{font-size:14px;font-weight:500;border:1.5px solid var(--orange);border-radius:6px;padding:3px 7px;width:130px;font-family:'DM Sans',sans-serif;}
+  .player-edit-btns{display:flex;gap:4px;}
+  .btn-save-name{background:var(--success);color:white;border:none;border-radius:5px;padding:3px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+  .btn-cancel-name{background:var(--bg);color:var(--muted);border:1.5px solid var(--border);border-radius:5px;padding:3px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+
+  /* Custom player toggle — replaces native checkboxes */
+  .player-toggle{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);cursor:pointer;transition:all 0.15s;-webkit-tap-highlight-color:transparent;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--muted);width:100%;text-align:left;}
+  .player-toggle.selected{border-color:var(--orange);background:var(--orange-light);color:var(--text);font-weight:600;}
+  .player-toggle-dot{width:18px;height:18px;border-radius:4px;border:2px solid var(--border);background:white;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all 0.15s;}
+  .player-toggle.selected .player-toggle-dot{border-color:var(--orange);background:var(--orange);color:white;}
+
+  /* Modal */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .modal-box{background:white;border-radius:var(--radius);padding:20px;max-width:340px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.2);}
+  .modal-title{font-size:15px;font-weight:600;margin-bottom:8px;}
+  .modal-body{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:18px;}
+  .modal-actions{display:flex;gap:8px;justify-content:flex-end;}
+  .modal-cancel{padding:9px 16px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;}
+  .modal-confirm{padding:9px 16px;background:var(--red);color:white;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="header-left">
+    <div class="app-logo">⚽</div>
+    <div>
+      <div class="app-title">Tigers Message Bot</div>
+      <div class="app-subtitle">Rugby Borough FC U7</div>
+    </div>
+  </div>
+  <button class="reset-btn" onclick="resetAll()">Reset</button>
+</div>
+
+<div class="nav-scroll">
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('match-parents')">Match → Parents</button>
+    <button class="nav-tab" onclick="switchTab('availability')">Availability</button>
+    <button class="nav-tab" onclick="switchTab('tournament')">Tournament → Parents</button>
+    <button class="nav-tab" onclick="switchTab('training')">Training</button>
+    <button class="nav-tab" onclick="switchTab('opposition')">Opposition</button>
+    <button class="nav-tab" onclick="switchTab('referee')">Referee</button>
+    <button class="nav-tab" onclick="switchTab('ref-allocated')">Referee → Allocated</button>
+    <button class="nav-tab" onclick="switchTab('result')">Post-match</button>
+    <button class="nav-tab" onclick="switchTab('cancel')">Cancellation</button>
+    <button class="nav-tab" onclick="switchTab('accounts')">💰 Accounts</button>
+  </div>
+</div>
+
+<div class="content">
+  <div class="mode-toggle" id="mode-toggle-wrap">
+    <button class="mode-btn active" id="mode-wa" onclick="setMode('whatsapp')">WhatsApp</button>
+    <button class="mode-btn" id="mode-sms" onclick="setMode('sms')">SMS</button>
+  </div>
+
+  <!-- MATCH PARENTS -->
+  <div id="tab-match-parents" class="tab-panel active">
+    <div class="form-row">
+      <div class="form-group"><label>Home or Away</label><select id="mp-homeaway"><option value="Home">Home</option><option value="Away">Away</option></select></div>
+      <div class="form-group"><label>Opposition <span class="shared-badge">shared</span></label><input id="f-opposition" type="text" placeholder="e.g. Coventry Sphinx"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Date <span class="shared-badge">shared</span></label><input id="f-date" type="date"/></div>
+      <div class="form-group"><label>Kick-off <span class="shared-badge">shared</span></label><input id="f-kickoff" type="time"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Meet-up time <span class="shared-badge">shared</span></label><input id="f-meetup" type="time"/></div>
+      <div class="form-group"><label>Pitch number <span class="shared-badge">shared</span></label><input id="f-pitchnum" type="text" placeholder="e.g. Pitch 1"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Pitch type <span class="shared-badge">shared</span></label><input id="f-pitchtype" type="text" placeholder="e.g. 3G, Grass"/></div>
+      <div></div>
+    </div>
+    <div class="form-group" id="mp-venue-wrap"><label>Venue / address</label><input id="mp-venue" type="text" placeholder="e.g. Butlin Road Rec Ground, Rugby"/></div>
+    <div class="form-group hidden" id="mp-gmaps-wrap"><label>Google Maps link (away)</label><input id="mp-gmaps" type="text" placeholder="https://maps.google.com/..."/></div>
+    <div class="form-group"><label>Additional note (optional)</label><textarea id="mp-note" placeholder="e.g. Bring extra layers..."></textarea></div>
+    <div class="preview-card" id="preview-match-parents">
+      <div class="preview-header"><span class="preview-label">Live preview</span></div>
+      <div class="preview-body"><div class="preview-hint">*asterisks* = bold in WhatsApp</div><div class="preview-text" id="ptxt-match-parents">Fill in the fields above to see a preview.</div></div>
+    </div>
+    <button class="btn-generate" onclick="generate('match-parents')">Generate message</button>
+    <div class="output-card hidden" id="out-match-parents">
+      <div class="output-header"><span class="output-label">Ready to send</span><button class="copy-btn" onclick="copyMsg('match-parents')">Copy</button></div>
+      <div class="output-body"><div class="output-hint">*asterisks* = bold in WhatsApp</div><div class="output-text" id="txt-match-parents"></div></div>
+    </div>
+  </div>
+
+  <!-- AVAILABILITY -->
+  <div id="tab-availability" class="tab-panel">
+    <div class="form-row">
+      <div class="form-group"><label>Match date <span class="shared-badge">shared</span></label><input id="av-date" type="date"/></div>
+      <div class="form-group"><label>Greeting</label>
+        <select id="av-greeting">
+          <option value="auto">Auto-detect</option>
+          <option value="Good morning">Good morning</option>
+          <option value="Good afternoon">Good afternoon</option>
+          <option value="Good evening">Good evening</option>
+        </select>
+      </div>
+    </div>
+    <div class="poll-label">Preview</div>
+    <div class="poll-preview" id="poll-preview">Fill in the date above to preview.</div>
+    <div class="preview-card" id="preview-availability">
+      <div class="preview-header"><span class="preview-label">Live preview</span></div>
+      <div class="preview-body"><div class="preview-hint">Preview updates as you fill in the date</div><div class="preview-text" id="ptxt-availability">Fill in the fields above to see a preview.</div></div>
+    </div>
+    <button class="btn-generate" onclick="generate('availability')">Generate message</button>
+    <div class="output-card hidden" id="out-availability">
+      <div class="output-header"><span class="output-label">Ready to send</span><button class="copy-btn" onclick="copyMsg('availability')">Copy</button></div>
+      <div class="output-body"><div class="output-hint">Then use WhatsApp's Poll: ✅ Available / ❌ Not available</div><div class="output-text" id="txt-availability"></div></div>
+    </div>
+  </div>
+
+  <!-- TOURNAMENT → PARENTS -->
+  <div id="tab-tournament" class="tab-panel">
+    <div class="form-row">
+      <div class="form-group"><label>Event type</label><select id="tn-type"><option value="Tournament">Tournament</option><option value="Trophy Event">Trophy Event</option></select></div>
+      <div class="form-group"><label>Event name</label><input id="tn-name" type="text" placeholder="e.g. Coventry Cup 2025"/></div>
+      <div class="form-group"><label>Event date</label><input id="tn-date" type="date"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Register interest by</label><input id="tn-deadline" type="date"/></div>
+      <div class="form-group"><label>Cost per team (optional)</label><input id="tn-cost" type="text" placeholder="e.g. 30"/></div>
+    </div>
+    <div class="form-group">
+      <label>Event time (optional)</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr 80px;gap:8px;">
+        <select id="tn-hour">
+          <option value="">Hour</option>
+          <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+          <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+          <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+          <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+        </select>
+        <select id="tn-min">
+          <option value="00">:00</option><option value="15">:15</option>
+          <option value="30">:30</option><option value="45">:45</option>
+        </select>
+        <select id="tn-ampm">
+          <option value="am">AM</option>
+          <option value="pm">PM</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label>Venue name</label><input id="tn-venue-name" type="text" placeholder="e.g. Butlin Road Recreation Ground"/></div>
+    <div class="form-group"><label>Venue address</label><input id="tn-venue-address" type="text" placeholder="e.g. Butlin Road, Rugby, CV21 4PN"/></div>
+    <div class="form-group"><label>Additional details (format, games, what's included etc.)</label><textarea id="tn-details" placeholder="e.g. 5v5 festival format, approx 4-5 games, medals for all players..."></textarea></div>
+    <div class="preview-card" id="preview-tournament">
+      <div class="preview-header"><span class="preview-label">Live preview</span></div>
+      <div class="preview-body"><div class="preview-hint">*asterisks* = bold in WhatsApp</div><div class="preview-text" id="ptxt-tournament">Fill in the fields above to see a preview.</div></div>
+    </div>
+    <button class="btn-generate" onclick="generate('tournament')">Generate message</button>
+    <div class="output-card hidden" id="out-tournament">
+      <div class="output-header"><span class="output-label">Ready to send</span><button class="copy-btn" onclick="copyMsg('tournament')">Copy</button></div>
+      <div class="output-body"><div class="output-hint">*asterisks* = bold in WhatsApp — attach event flyer separately in WhatsApp</div><div class="output-text" id="txt-tournament"></div></div>
+    </div>
+  </div>
+
+  <!-- TRAINING -->
+  <div id="tab-training" class="tab-panel">
+    <div class="form-row">
+      <div class="form-group"><label>Date</label><input id="tr-date" type="date"/></div>
+      <div class="form-group"><label>Start time</label><input id="tr-start" type="time"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>End time</label><input id="tr-end" type="time"/></div>
+      <div class="form-group"><label>Pitch type</label><input id="tr-pitch" type="text" placeholder="e.g. 3G, Grass"/></div>
+    </div>
+    <div class="form-group"><label>Venue</label><input id="tr-venue" type="text" placeholder="e.g. Butlin Road Rec Ground"/></div>
+    <div class="form-group"><label>What to bring</label><input id="tr-bring" type="text" placeholder="e.g. Shin guards, boots, water bottle"/></div>
+    <div class="form-group"><label>Additional note (optional)</label><textarea id="tr-note" placeholder="e.g. Passing drills this week..."></textarea></div>
+    <div class="preview-card" id="preview-training">
+      <div class="preview-header"><span class="preview-label">Live preview</span></div>
+      <div class="preview-body"><div class="preview-hint">*asterisks* = bold in WhatsApp</div><div class="preview-text" id="ptxt-training">Fill in the fields above to see a preview.</div></div>
+    </div>
+    <button class="btn-generate" onclick="generate('training')">Generate message</button>
+    <div class="output-card hidden" id="out-training">
+      <div class="output-header"><span class="output-label">Ready to send</span><button class="copy-btn" onclick="copyMsg('training')">Copy</button></div>
+      <div class="output-body"><div class="output-hint">*asterisks* = bold in WhatsApp</div><div class="output-text" id="txt-training"></div></div>
+    </div>
+  </div>
+
+  <!-- OPPOSITION -->
+  <div id="tab-opposition" class="tab-panel">
+    <div class="form-row">
+      <div class="form-group"><label>Manager name</label><input id="op-name" type="text" placeholder="e.g. James"/></div>
+      <div class="form-group"><label>Opposition <span class="shared-badge">shared</span></label><input id="op-opposition-mirror" type="text" placeholder="e.g. Coventry Sphinx"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Date <span class="shared-badge">shared</span></label><input id="op-date-mirror" type="date"/></div>
+      <div class="form-group"><label>Kick-off <span class="shared-badge">shared</span></label><input id="op-kickoff-mirror" type="time"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Meet-up time <span class="shared-badge">shared</span></label><input id="op-meetup-mirror" type="time"/></div>
+      <div class="form-group"><label>Pitch number <span class="shared-badge">shared</span></label><input id="op-pitchnum-mirror" type="text" placeholder="e.g. Pitch 1"/></div>
+    </div>
+    <div class="form-group"><label>Pitch type <span class="shared-badge">shared</span></label><input id="op-pitchtype-mirror" type="text" placeholder="e.g. 3G, Grass"/></div>
+    <div class="form-group"><label>Additional note (optional)</label><textarea id="op-note" placeholder="e.g. Parking on-site..."></textarea></div>
+    <div class="preview-card" id="preview-opposition">
+      <div class="preview-header"><span class="preview-label">Live preview</span></div>
+      <div class="preview-body"><div class="preview-hint">*asterisks* = bold — attach pitch map too</div><div class="preview-text" id="ptxt-opposition">Fill in the fields above to see a preview.</div></div>
+    </div>
+    <button class="btn-generate" onclick="generate('opposition')">Generate message</button>
+    <div class="output-card hidden" id="out-opposition">
+      <div class="output-header"><span class="output-label">Ready to send</span><button class="copy-btn" onclick="copyMsg('opposition')">Copy</button></div>
+      <div class="output-body"><div class="output-hint">*asterisks* = bold — attach pitch map too</div><div class="output-text" id="txt-opposition"></div></div>
+    </div>
+    <div class="pitch-info">
+      <strong>Pitch map reminder</strong>
+      Nationwide Windows Arena, Kilsby Lane, Rugby CV21 4PN<br/>
+      SF1 — Pitches 1,2,3 (3G) · LC1 — Pitches 7,8,9 (3G) · SF3 — Pitches 10,11,12 (3G)
+    </div>
+  </div>
+
+  <!-- REFEREE -->
+  <div id="tab-referee" class="tab-panel">
+    <div class="form-row">
+      <div class="form-group"><label>Date <span class="shared-badge">shared</span></label><input id="ref-date-mirror" type="date"/></div>
+      <div class="form-group"><label>Kick-off <span class="shared-badge">shared</span></label><input id="ref-kickoff-mirror" type="time"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Pitch number <span class="shared-badge">shared</span></label><input id="ref-pitchnum-mirror" type="text" placeholder="e.g. Pitch 1"/></div>
+      <div class="form-group"><label>Pitch type <span class="shared-badge">shared</span></label><input id="ref-pitchtype-mirror" type="text" placeholder="e.g. 3G"/></div>
+    </div>
+    <div class="preview-card" id="preview-referee">
+      <div class="preview-header"><span class="preview-label">Live preview</span></div>
+      <div class="preview-body"><div class="preview-hint">Clean template format</div><div class="preview-text" id="ptxt-referee">Fill in the fields above to see a preview.</div></div>
+    </div>
+    <button class="btn-generate" onclick="generate('referee')">Generate message</button>
+    <div class="output-card hidden" id="out-referee">
+      <div class="output-header"><span class="output-label">Ready to send</span><button class="copy-btn" onclick="copyMsg('referee')">Copy</button></div>
+      <div class="output-body"><div class="output-text" id="txt-referee"></div></div>
+    </div>
+  </div>
+
+  <!-- REFEREE ALLOCATED -->
+  <div id="tab-ref-allocated" class="tab-panel">
+    <div class="form-row">
+      <div class="form-group"><label>Contact name (optional)</label><input id="ra-contact" type="text" placeholder="e.g. Mr Smith"/></div>
+      <div class="form-group"><label>Referee name</label><input id="ra-refname" type="text" placeholder="e.g. Mia"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Date <span class="shared-badge">shared</span></label><input id="ra-date-mirror" type="date"/></div>
+      <div class="form-group"><label>Kick-off <span class="shared-badge">shared</span></label><input id="ra-kickoff-mirror" type="time"/></div>
+    </div>
+    <div class="form-group"><label>Pitch number <span class="shared-badge">shared</span></label><input id="ra-pitchnum-mirror" type="text" placeholder="e.g. LC1 – Pitch 8"/></div>
+    <div class="preview-card" id="preview-ref-allocated">
+      <div class="preview-header"><span class="preview-label">Live preview</span></div>
+      <div class="preview-body"><div class="preview-hint">*asterisks* = bold in WhatsApp</div><div class="preview-text" id="ptxt-ref-allocated">Fill in the fields above to see a preview.</div></div>
+    </div>
+    <button class="btn-generate" onclick="generate('ref-allocated')">Generate message</button>
+    <div class="output-card hidden" id="out-ref-allocated">
+      <div class="output-header"><span class="output-label">Ready to send</span><button class="copy-btn" onclick="copyMsg('ref-allocated')">Copy</button></div>
+      <div class="output-body"><div class="output-hint">*asterisks* = bold in WhatsApp</div><div class="output-text" id="txt-ref-allocated"></div></div>
+    </div>
+  </div>
+
+  <!-- POST-MATCH -->
+  <div id="tab-result" class="tab-panel">
+    <div class="form-row">
+      <div class="form-group"><label>Opposition <span class="shared-badge">shared</span></label><input id="res-opposition-mirror" type="text" placeholder="e.g. Coventry Sphinx"/></div>
+      <div class="form-group"><label>Result</label><select id="res-result"><option value="win">Win</option><option value="loss">Loss</option><option value="draw">Draw</option></select></div>
+    </div>
+    <div class="form-group"><label>Man of the match (optional)</label><input id="res-motm" type="text" placeholder="e.g. Jamie"/></div>
+    <div class="form-group"><label>How did the team play?</label><textarea id="res-notes" placeholder="e.g. Great energy, improved passing..."></textarea></div>
+    <div class="preview-card" id="preview-result">
+      <div class="preview-header"><span class="preview-label">Live preview</span></div>
+      <div class="preview-body"><div class="preview-hint">Message updates with your inputs</div><div class="preview-text" id="ptxt-result">Fill in the fields above to see a preview.</div></div>
+    </div>
+    <button class="btn-generate" id="btn-result" onclick="generate('result')">Generate message</button>
+    <div class="output-card hidden" id="out-result">
+      <div class="output-header"><span class="output-label">AI generated</span><button class="copy-btn" onclick="copyMsg('result')">Copy</button></div>
+      <div class="output-body"><div class="output-text" id="txt-result"></div></div>
+    </div>
+  </div>
+
+  <!-- CANCELLATION -->
+  <div id="tab-cancel" class="tab-panel">
+    <div class="form-row">
+      <div class="form-group"><label>Type</label><select id="can-type"><option value="match">Match</option><option value="training">Training</option></select></div>
+      <div class="form-group"><label>Date <span class="shared-badge">shared</span></label><input id="can-date-mirror" type="date"/></div>
+    </div>
+    <div class="form-group"><label>Reason</label><input id="can-reason" type="text" placeholder="e.g. Waterlogged pitch..."/></div>
+    <div class="form-group"><label>Rescheduled? (optional)</label><input id="can-reschedule" type="text" placeholder="e.g. New date TBC / Rescheduled to 12 Apr"/></div>
+    <div class="preview-card" id="preview-cancel">
+      <div class="preview-header"><span class="preview-label">Live preview</span></div>
+      <div class="preview-body"><div class="preview-hint">*asterisks* = bold in WhatsApp</div><div class="preview-text" id="ptxt-cancel">Fill in the fields above to see a preview.</div></div>
+    </div>
+    <button class="btn-generate" onclick="generate('cancel')">Generate message</button>
+    <div class="output-card hidden" id="out-cancel">
+      <div class="output-header"><span class="output-label">Ready to send</span><button class="copy-btn" onclick="copyMsg('cancel')">Copy</button></div>
+      <div class="output-body"><div class="output-text" id="txt-cancel"></div></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- ACCOUNTS TAB                                  -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div id="tab-accounts" class="tab-panel">
+
+    <!-- KPI Dashboard -->
+    <div class="acc-section-title">📊 Dashboard</div>
+    <div class="kpi-grid">
+      <div class="kpi-card green">
+        <div class="kpi-label">Total Collected</div>
+        <div class="kpi-value green" id="kpi-collected">£0.00</div>
+      </div>
+      <div class="kpi-card red">
+        <div class="kpi-label">Total Spent</div>
+        <div class="kpi-value red" id="kpi-spent">£0.00</div>
+      </div>
+      <div class="kpi-card orange">
+        <div class="kpi-label">Balance</div>
+        <div class="kpi-value orange" id="kpi-balance">£0.00</div>
+      </div>
+      <div class="kpi-card navy">
+        <div class="kpi-label">Players Paid</div>
+        <div class="kpi-value" id="kpi-players">0 / 0</div>
+      </div>
+    </div>
+
+    <!-- Create Payment Request -->
+    <div class="acc-section-title">📤 Create Payment Request</div>
+    <div class="acc-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Category</label>
+          <select id="req-cat">
+            <option value="Referee Fee">Referee Fee</option>
+            <option value="Tournament Fee">Tournament Fee</option>
+            <option value="Equipment">Equipment</option>
+            <option value="Pitch Hire">Pitch Hire</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Total Amount (£)</label>
+          <input id="req-total" type="number" min="0" step="0.01" placeholder="e.g. 20.00"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <input id="req-desc" type="text" placeholder="e.g. Referee fee — 15 Mar match"/>
+      </div>
+      <div class="form-group">
+        <label>Apply to players</label>
+        <div id="req-player-checks" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <span style="font-size:11px;color:var(--muted)">Per-player amount: <strong id="req-per-player">£—</strong></span>
+        <button class="btn-secondary" style="font-size:11px;padding:5px 10px" onclick="toggleAllReqPlayers()">Toggle all</button>
+      </div>
+      <button class="btn-add" onclick="createRequest()">+ Create Request</button>
+    </div>
+
+    <!-- Outstanding Requests -->
+    <div class="acc-section-title">⏳ Outstanding Requests</div>
+    <div id="requests-open"></div>
+
+    <!-- Completed Requests -->
+    <div class="acc-section-title" id="completed-title" style="display:none">✅ Completed Requests</div>
+    <div id="requests-done"></div>
+
+    <!-- Ad-hoc Payment -->
+    <div class="acc-section-title">💰 Ad-hoc Payment (not linked to a request)</div>
+    <div class="acc-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Player Name</label>
+          <select id="pay-player">
+            <option value="">Select player…</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Amount (£)</label>
+          <input id="pay-amount" type="number" min="0" step="0.01" placeholder="0.00"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date</label>
+          <input id="pay-date" type="date"/>
+        </div>
+        <div class="form-group">
+          <label>Method</label>
+          <select id="pay-method">
+            <option value="Cash">Cash</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Note (optional)</label>
+        <input id="pay-note" type="text" placeholder="e.g. Kit contribution"/>
+      </div>
+      <button class="btn-add" onclick="addPayment()">+ Add Ad-hoc Payment</button>
+    </div>
+
+    <!-- Add Expense -->
+    <div class="acc-section-title">💸 Log Expense</div>
+    <div class="acc-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Category</label>
+          <select id="exp-cat">
+            <option value="Match Fees / Referees">Match Fees / Referees</option>
+            <option value="Pitch Hire">Pitch Hire</option>
+            <option value="Tournament Entry Fees">Tournament Entry Fees</option>
+            <option value="Training Kit / Equipment">Training Kit / Equipment</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Amount (£)</label>
+          <input id="exp-amount" type="number" min="0" step="0.01" placeholder="0.00"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date</label>
+          <input id="exp-date" type="date"/>
+        </div>
+        <div class="form-group">
+          <label>Receipt / Ref (optional)</label>
+          <input id="exp-ref" type="text" placeholder="e.g. REC-001"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <input id="exp-desc" type="text" placeholder="e.g. Referee for 15 Mar match"/>
+      </div>
+      <button class="btn-add" onclick="addExpense()">+ Add Expense</button>
+    </div>
+
+    <!-- Ledger -->
+    <div class="acc-section-title">📋 Transaction Ledger</div>
+    <div class="ledger-wrap">
+      <table class="ledger">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Detail</th>
+            <th style="text-align:right">Amount</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="ledger-body">
+          <tr><td colspan="5" class="empty-state">No transactions yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Player Status -->
+    <div class="acc-section-title">🧍 Player Payment Status</div>
+    <div class="player-grid" id="player-grid">
+      <!-- rendered by JS -->
+    </div>
+
+    <!-- Manage Players -->
+    <div class="acc-section-title">⚙️ Manage Players</div>
+    <div class="player-grid" id="manage-player-grid"></div>
+    <div class="acc-form">
+      <div class="form-row" style="align-items:flex-end">
+        <div class="form-group" style="margin-bottom:0">
+          <label>Add New Player</label>
+          <input id="new-player-name" type="text" placeholder="e.g. Liam"/>
+        </div>
+        <button class="btn-add" style="width:auto;padding:11px 18px" onclick="addPlayer()">Add</button>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="acc-section-title">⬇️ Export & Reset</div>
+    <button class="btn-export" onclick="exportExcel()">📥 Export to Excel (.xlsx)</button>
+    <div class="acc-actions">
+      <button class="btn-danger" onclick="confirmAccReset()">🗑 Reset Accounts Data</button>
+    </div>
+
+  </div><!-- end accounts tab -->
+
+</div><!-- end content -->
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Reset Modal -->
+<div class="modal-overlay hidden" id="acc-reset-modal">
+  <div class="modal-box">
+    <div class="modal-title">⚠️ Reset Accounts Data?</div>
+    <div class="modal-body">This will save a backup copy of your current data to an Excel file, then permanently clear all payments, expenses and player records. This cannot be undone.</div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeAccModal()">Cancel</button>
+      <button class="modal-confirm" onclick="doAccReset()">Save backup & reset</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════
+   MESSAGING BOT — original logic (unchanged)
+════════════════════════════════════════════════════════ */
+const STORE_KEY = 'rbt_v9';
+const TABS = ['match-parents','availability','tournament','training','opposition','referee','ref-allocated','result','cancel','accounts'];
+const b = v => v ? (MODE === 'whatsapp' ? '*' + v + '*' : v) : '';
+let MODE = 'whatsapp';
+
+function bRaw(v) { return MODE === 'whatsapp' ? '*' + v + '*' : v; }
+
+function setMode(m) {
+  MODE = m;
+  STATE['_mode'] = m;
+  persist();
+  document.getElementById('mode-wa').classList.toggle('active', m === 'whatsapp');
+  document.getElementById('mode-sms').classList.toggle('active', m === 'sms');
+  updateAllPreviews();
+}
+
+const SHARED = {
+  'f-date':     ['f-date','av-date','op-date-mirror','ref-date-mirror','can-date-mirror','ra-date-mirror'],
+  'f-kickoff':  ['f-kickoff','op-kickoff-mirror','ref-kickoff-mirror','ra-kickoff-mirror'],
+  'f-meetup':   ['f-meetup','op-meetup-mirror'],
+  'f-opposition':['f-opposition','op-opposition-mirror','res-opposition-mirror'],
+  'f-pitchnum': ['f-pitchnum','op-pitchnum-mirror','ref-pitchnum-mirror','ra-pitchnum-mirror'],
+  'f-pitchtype':['f-pitchtype','op-pitchtype-mirror','ref-pitchtype-mirror'],
+};
+const MIRROR_TO_CANONICAL = {};
+Object.entries(SHARED).forEach(([canon, mirrors]) => {
+  mirrors.forEach(m => { MIRROR_TO_CANONICAL[m] = canon; });
+});
+
+let STATE = {};
+try { STATE = JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); } catch(e) { STATE = {}; }
+
+document.addEventListener('DOMContentLoaded', function() {
+  wireAllFields();
+  restoreAllFields();
+  if (STATE['_mode']) setMode(STATE['_mode']);
+  updateAwayToggle();
+  updatePollPreview();
+  // Accounts boot
+  initAccounts();
+});
+
+function wireAllFields() {
+  document.querySelectorAll('input[id],select[id],textarea[id]').forEach(el => {
+    // Skip accounts inputs — they have their own handlers
+    if (el.closest('#tab-accounts')) return;
+    ['input','change'].forEach(evt => {
+      el.addEventListener(evt, function() {
+        const canon = MIRROR_TO_CANONICAL[this.id];
+        if (canon) {
+          STATE[canon] = this.value;
+          syncMirrors(canon, this.value);
+        } else {
+          STATE[this.id] = this.value;
+        }
+        persist();
+        updateLatch(this);
+        if (this.id === 'mp-homeaway') updateAwayToggle();
+        if (canon === 'f-date' || this.id === 'av-greeting') updatePollPreview();
+        updateActivePreview();
+      });
+    });
+  });
+}
+
+function syncMirrors(canonKey, value) {
+  (SHARED[canonKey] || []).forEach(mirrorId => {
+    const el = document.getElementById(mirrorId);
+    if (el) { el.value = value; updateLatch(el); }
+  });
+}
+
+function restoreAllFields() {
+  Object.keys(SHARED).forEach(canon => {
+    const val = STATE[canon];
+    if (val !== undefined && val !== '') syncMirrors(canon, val);
+  });
+  document.querySelectorAll('input[id],select[id],textarea[id]').forEach(el => {
+    if (el.closest('#tab-accounts')) return;
+    if (MIRROR_TO_CANONICAL[el.id]) return;
+    const val = STATE[el.id];
+    if (val !== undefined && val !== '') { el.value = val; updateLatch(el); }
+  });
+  updateAllPreviews();
+}
+
+function persist() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(STATE)); } catch(e) {}
+}
+
+function updateLatch(el) {
+  el.classList.toggle('latched', el.value !== null && el.value.trim() !== '');
+}
+
+function switchTab(id) {
+  TABS.forEach(t => { document.getElementById('tab-'+t)?.classList.remove('active'); });
+  document.getElementById('tab-'+id)?.classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(el => {
+    el.classList.toggle('active', el.getAttribute('onclick') === "switchTab('"+id+"')");
+  });
+  const activeTab = document.querySelector('.nav-tab.active');
+  if (activeTab) activeTab.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+  // Hide mode toggle on accounts tab
+  const mt = document.getElementById('mode-toggle-wrap');
+  if (mt) mt.style.display = id === 'accounts' ? 'none' : '';
+  if (id !== 'accounts') updatePreview(id);
+  if (id === 'accounts') { renderAccounts(); renderRequestPlayerChecks(); }
+}
+
+function resetAll() {
+  if (!confirm('Clear all saved inputs?')) return;
+  STATE = {};
+  try { localStorage.removeItem(STORE_KEY); } catch(e) {}
+  document.querySelectorAll('input[id],select[id],textarea[id]').forEach(el => {
+    if (el.closest('#tab-accounts')) return;
+    el.value = el.tagName === 'SELECT' ? (el.options[0]?.value || '') : '';
+    el.classList.remove('latched');
+  });
+  TABS.forEach(t => { const o = document.getElementById('out-'+t); if(o) o.classList.add('hidden'); });
+  updateAwayToggle();
+  updatePollPreview();
+}
+
+function updateAwayToggle() {
+  const away = (STATE['mp-homeaway'] || 'Home') === 'Away';
+  document.getElementById('mp-gmaps-wrap')?.classList.toggle('hidden', !away);
+}
+
+function getGreeting() {
+  const v = STATE['av-greeting'] || 'auto';
+  if (v !== 'auto') return v;
+  const h = new Date().getHours();
+  return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+}
+function fmtOrdinal(d) {
+  if (!d) return '';
+  const [y,m,day] = d.split('-');
+  const dN=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const mN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const dt = new Date(+y,+m-1,+day);
+  const n=+day, s=n===1||n===21||n===31?'st':n===2||n===22?'nd':n===3||n===23?'rd':'th';
+  return dN[dt.getDay()]+' '+n+s+' '+mN[+m-1];
+}
+function updatePollPreview() {
+  const el = document.getElementById('poll-preview'); if(!el) return;
+  const d = STATE['f-date'] || '';
+  if (!d) { el.textContent = 'Fill in the date above to preview.'; return; }
+  el.textContent = getGreeting()+' all, please can you confirm your availability for the match on *'+fmtOrdinal(d)+'*. Thanks';
+}
+function fmtShort(d) { if(!d) return ''; const [y,m,day]=d.split('-'); return day+'/'+m+'/'+y; }
+function fmtLong(d) {
+  if(!d) return '';
+  const [y,m,day]=d.split('-');
+  const dN=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const mN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dt=new Date(+y,+m-1,+day);
+  return dN[dt.getDay()]+' '+(+day)+' '+mN[+m-1]+' '+y;
+}
+function fmtTime(t) {
+  if(!t) return '';
+  const [h,m]=t.split(':');
+  const hr=+h,ampm=hr>=12?'pm':'am',hr12=hr%12||12;
+  return hr12+':'+m+ampm;
+}
+function g(id) {
+  const canon = MIRROR_TO_CANONICAL[id];
+  return STATE[canon || id] || '';
+}
+
+function buildMatchParents() {
+  const ha=g('mp-homeaway')||'Home', opp=g('f-opposition')||'[Opposition]';
+  const date=fmtShort(g('f-date')), ko=fmtTime(g('f-kickoff')), mu=fmtTime(g('f-meetup'));
+  const pn=g('f-pitchnum'), pt=g('f-pitchtype'), venue=g('mp-venue')||'[Venue]';
+  const gmaps=g('mp-gmaps'), note=g('mp-note');
+  const fix=ha==='Home'?'Rugby Borough Tigers vs '+opp:opp+' vs Rugby Borough Tigers';
+  let msg='📢 '+ha.toUpperCase()+' MATCH INTIMATION 📢\n'+b(fix)+'\nDate - '+b(date)+'\nKick off - '+b(ko)+'\nMeet Up Time - '+b(mu);
+  if(pn) msg+='\nPitch - '+b(pn);
+  if(pt) msg+='\nPitch Type - '+b(pt);
+  msg+='\nVenue - '+b(venue)+'\n\n'+bRaw('MATCH KIT, SHIN GUARDS AND FOOTBALL SHOES ARE A MUST');
+  if(note) msg+='\n\n'+note;
+  if(ha==='Away'&&gmaps) msg+='\nAddress Link - '+gmaps;
+  msg+='\n\nPlease Arrive by '+b(mu)+' so we have time to Warmup.\n\nAny questions please let me know.\nThanks\nAshwin ☺️';
+  return msg;
+}
+function buildAvailability() {
+  return getGreeting()+' all, please can you confirm your availability for the match on *'+fmtOrdinal(g('f-date'))+'*. Thanks';
+}
+function buildTraining() {
+  const date=fmtShort(g('tr-date')), s=fmtTime(g('tr-start')), e=fmtTime(g('tr-end'));
+  const venue=g('tr-venue')||'[Venue]', pt=g('tr-pitch');
+  const bring=g('tr-bring')||'shin guards, boots and water bottle', note=g('tr-note');
+  let msg='🏃 TRAINING SESSION 🏃\nDate - '+b(date)+'\nTime - '+b(s+' – '+e)+'\nVenue - '+b(venue);
+  if(pt) msg+='\nPitch Type - '+b(pt);
+  msg+='\n\nPlease bring: '+b(bring);
+  if(note) msg+='\n\n'+note;
+  msg+='\n\nAny questions please let me know.\nThanks\nAshwin ☺️';
+  return msg;
+}
+function buildOpposition() {
+  const name=g('op-name'), opp=g('f-opposition')||'[Opposition]';
+  const date=g('f-date'), ko=fmtTime(g('f-kickoff')), mu=fmtTime(g('f-meetup'));
+  const pn=g('f-pitchnum'), pt=g('f-pitchtype')||'[Type]', note=g('op-note');
+  const greeting=name?'Hi '+name+',':'Hi,';
+  let msg=greeting+'\nMatch details for '+b(fmtLong(date))+' - '+b('Rugby Borough Tigers vs '+opp)+'.\n\nDate - '+b(fmtShort(date))+'\nKick off - '+b(ko)+'\nMeet Up Time - '+b(mu);
+  if(pn) msg+='\nPitch - '+b(pn);
+  msg+='\nPitch Type - '+b(pt);
+  msg+='\n\nThe address is:\nRugby Borough Football Club\nKilsby Lane\nRugby\nCV21 4PN';
+  msg+='\n\nWe play in '+bRaw('orange tops and white shorts')+'.\n\nThe pitch allocated is a '+b(pt)+' pitch.\n\n'+bRaw('No dogs are allowed on site.');
+  if(note) msg+='\n\n'+note;
+  msg+='\n\nI\'ll send over the pitch map too so you can find us easily.\n\nAny questions please let me know.\nThanks,\nAshwin';
+  return msg;
+}
+function buildReferee() {
+  const date=g('f-date'), ko=fmtTime(g('f-kickoff'));
+  const pn=g('f-pitchnum')||'[Pitch TBC]', pt=g('f-pitchtype');
+  let msg='U7 Tigers\n5v5\n'+b(fmtLong(date))+'\n'+b(ko)+'\n'+b(pn);
+  if(pt) msg+=' ('+pt+')';
+  msg+='\n*£20*';
+  return msg;
+}
+function buildCancel() {
+  const type=g('can-type')||'match', date=fmtShort(g('f-date'));
+  const reason=g('can-reason')||'unforeseen circumstances', reschedule=g('can-reschedule');
+  let msg='❌ *'+(type==='match'?'MATCH':'TRAINING')+' CANCELLATION* ❌\n\nUnfortunately the '+type+' scheduled for '+b(date)+' has been cancelled.\nReason: '+b(reason);
+  if(reschedule) msg+='\n\n'+reschedule;
+  msg+='\n\nSorry for any inconvenience — I\'ll keep you updated.\nAny questions please let me know.\nThanks\nAshwin ☺️';
+  return msg;
+}
+
+const BUILDERS = {
+  'match-parents': ()=>buildMatchParents(),
+  'availability':  ()=>buildAvailability(),
+  'training':      ()=>buildTraining(),
+  'opposition':    ()=>buildOpposition(),
+  'referee':       ()=>buildReferee(),
+  'result':        ()=>buildResult(),
+  'cancel':        ()=>buildCancel(),
+  'ref-allocated': ()=>buildRefAllocated(),
+  'tournament':    ()=>buildTournament(),
+};
+
+function updatePreview(tid) {
+  const el = document.getElementById('ptxt-'+tid);
+  if (!el) return;
+  try {
+    const msg = BUILDERS[tid]();
+    el.textContent = msg || 'Fill in the fields above to see a preview.';
+    el.style.color = msg ? 'var(--text)' : 'var(--muted)';
+  } catch(e) { el.textContent = 'Fill in the fields above to see a preview.'; }
+}
+function updateAllPreviews() { TABS.forEach(t => updatePreview(t)); }
+function updateActivePreview() {
+  const active = document.querySelector('.tab-panel.active');
+  if (!active) return;
+  const tid = active.id.replace('tab-','');
+  updatePreview(tid);
+}
+
+function buildResult() {
+  const opp=g('f-opposition')||'the opposition';
+  const result=g('res-result')||'win';
+  const motm=g('res-motm');
+  const notes=g('res-notes');
+  const winLines=['What a day for the Tigers! The lads gave everything and came away with a brilliant result against *'+opp+'*.','Fantastic effort from every single one of them today against *'+opp+'* — they worked so hard and it really showed.','So proud of the boys today — they played with great energy and heart from start to finish against *'+opp+'*.'];
+  const drawLines=['A good battle today against *'+opp+'* — the Tigers showed real character and kept fighting throughout.','Solid effort from the Tigers against *'+opp+'* — they gave everything and showed great teamwork.','A tough match against *'+opp+'* but the boys did themselves proud — fantastic attitude all round.'];
+  const lossLines=["It wasn't our day today against *"+opp+"* but the Tigers never stopped trying — so proud of their effort.","A tough one against *"+opp+"* but the boys gave 100% from first whistle to last — that's all we can ask for.","Results like this are part of the journey — the Tigers showed great spirit against *"+opp+"* and we'll come back stronger."];
+  const pool=result==='win'?winLines:result==='draw'?drawLines:lossLines;
+  const headline=pool[Math.floor(Math.random()*pool.length)];
+  const emoji=result==='win'?'🏆':result==='draw'?'🤝':'💪';
+  let msg='⚽ '+bRaw('MATCH REPORT — vs '+opp)+' ⚽\n\n'+emoji+' '+headline+'\n\n';
+  if(notes&&notes.trim()) msg+=notes.trim()+'\n\n';
+  if(motm) msg+='🌟 '+bRaw('Man of the Match: '+motm)+' — outstanding today!\n\n';
+  msg+='Thank you all for your amazing support on the sidelines — it means everything to the boys!\nThanks\nAshwin ☺️';
+  return msg;
+}
+
+function buildTournament() {
+  const type=g('tn-type')||'Tournament', name=g('tn-name')||'[Event Name]';
+  const date=g('tn-date'), deadline=g('tn-deadline'), cost=g('tn-cost');
+  const venueName=g('tn-venue-name')||'[Venue]', venueAddress=g('tn-venue-address');
+  const details=g('tn-details'), deadlineStr=deadline?fmtOrdinal(deadline):'';
+  const hour=g('tn-hour'), min=g('tn-min')||'00', ampm=g('tn-ampm')||'am';
+  const timeStr=hour?hour+':'+min+ampm.toUpperCase():'';
+  let msg='📋 '+bRaw(type.toUpperCase()+' — INTEREST REGISTRATION')+' 📋\n\n';
+  msg+=bRaw(name)+'\n\n';
+  msg+='Hi all! We have an opportunity to enter the following '+type.toLowerCase()+' and would love to know if your child would like to take part before we commit. ⚽\n\n';
+  msg+='Date - *'+fmtLong(date)+(timeStr?' at '+timeStr:'')+'*\n';
+  msg+='Venue - *'+venueName+'*';
+  if(venueAddress) msg+=', '+venueAddress;
+  msg+='\n';
+  if(cost&&cost.trim()) msg+='Cost per team - '+b('£'+cost.trim())+'\n';
+  if(details&&details.trim()) msg+='\n'+details.trim()+'\n';
+  msg+='\n';
+  if(deadlineStr) msg+='Please show your interest by *voting in the poll below by '+deadlineStr+'*. Places may be limited so it is first come first served!\n';
+  else msg+='Please show your interest by *voting in the poll below*. Places may be limited so it is first come first served!\n';
+  msg+="\nI'll send over more details as an attachment separately.\n";
+  msg+='\nAny questions please let me know.\nThanks\nAshwin ☺️';
+  return msg;
+}
+
+function buildRefAllocated() {
+  const contact=g('ra-contact'), refname=g('ra-refname')||'[Referee Name]';
+  const date=g('f-date'), kickoff=fmtTime(g('f-kickoff')), pitchnum=g('f-pitchnum')||'[Pitch TBC]';
+  const greeting=contact?'Hi '+contact+',':'Hi,';
+  let msg=greeting+" I'm Ashwin – manager of Rugby Tigers U7s. Hope you're well!\n\n";
+  msg+="I've been passed your details regarding refereeing our U7 match this "+b(fmtOrdinal(date))+". Details are as follows:\n\n";
+  msg+='📍 Rugby Borough FC, Kilsby Lane, Rugby, CV21 4PN\n';
+  msg+='🏟️ '+b(pitchnum)+'\n';
+  msg+='🕐 Kick-off: '+b(kickoff)+'\n\n';
+  msg+="It's a 5-a-side format – 40 minutes across four 10-minute quarters.\n\n";
+  msg+='Would '+b(refname)+' be available?\n';
+  msg+="We're happy to offer *£20* for the match.\n\n";
+  msg+='Looking forward to hearing from you!\n\nAshwin 👍';
+  return msg;
+}
+
+function generate(type) {
+  const out=document.getElementById('out-'+type);
+  const txt=document.getElementById('txt-'+type);
+  out.classList.remove('hidden');
+  const msg=type==='match-parents'?buildMatchParents():type==='availability'?buildAvailability():type==='training'?buildTraining():type==='opposition'?buildOpposition():type==='referee'?buildReferee():type==='result'?buildResult():type==='tournament'?buildTournament():type==='ref-allocated'?buildRefAllocated():buildCancel();
+  txt.textContent=msg;
+}
+
+function copyMsg(type) {
+  const txt=document.getElementById('txt-'+type)?.textContent; if(!txt) return;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn=document.querySelector('#out-'+type+' .copy-btn');
+    if(btn){btn.textContent='Copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},2000);}
+  });
+}
+
+/* ════════════════════════════════════════════════════════
+   ACCOUNTS — data model & logic
+════════════════════════════════════════════════════════ */
+const ACC_KEY = 'tigers_accounts_v1';
+let ACC = { players: [], payments: [], expenses: [], requests: [] };
+
+function loadAcc() {
+  try { ACC = JSON.parse(localStorage.getItem(ACC_KEY) || 'null') || { players:[], payments:[], expenses:[], requests:[] }; }
+  catch(e) { ACC = { players:[], payments:[], expenses:[], requests:[] }; }
+  if (!ACC.players)  ACC.players  = [];
+  if (!ACC.payments) ACC.payments = [];
+  if (!ACC.expenses) ACC.expenses = [];
+  if (!ACC.requests) ACC.requests = [];
+}
+function saveAcc() {
+  try { localStorage.setItem(ACC_KEY, JSON.stringify(ACC)); } catch(e) {}
+}
+
+function initAccounts() {
+  loadAcc();
+  if (ACC.players.length === 0) {
+    ['Player 1','Player 2','Player 3','Player 4','Player 5','Player 6','Player 7','Player 8']
+      .forEach(p => ACC.players.push({ id: uid(), name: p }));
+    saveAcc();
+  }
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('pay-date').value = today;
+  document.getElementById('exp-date').value = today;
+  renderAccounts();
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+function renderAccounts() {
+  loadAcc();
+  renderPlayerDropdown();
+  renderKPIs();
+  renderRequests();
+  renderLedger();
+  renderPlayerGrid();
+  renderManagePlayerGrid();
+}
+
+function renderPlayerDropdown() {
+  const sel = document.getElementById('pay-player');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Select player…</option>';
+  ACC.players.forEach(p => {
+    const o = document.createElement('option');
+    o.value = p.id; o.textContent = p.name;
+    sel.appendChild(o);
+  });
+  if (cur) sel.value = cur;
+}
+
+// Selected player IDs for the request form — plain Set, no native checkboxes
+let REQ_SELECTED = new Set();
+
+function renderRequestPlayerChecks() {
+  const wrap = document.getElementById('req-player-checks');
+  if (!wrap) return;
+  // Initialise all players as selected on first render
+  REQ_SELECTED = new Set(ACC.players.map(p => p.id));
+  renderPlayerToggles();
+  // Wire req-total for live calc
+  const totalInput = document.getElementById('req-total');
+  if (totalInput) {
+    totalInput.removeEventListener('input', updatePerPlayer);
+    totalInput.addEventListener('input', updatePerPlayer);
+  }
+  updatePerPlayer();
+}
+
+function renderPlayerToggles() {
+  const wrap = document.getElementById('req-player-checks');
+  if (!wrap) return;
+  wrap.innerHTML = ACC.players.map(p => {
+    const sel = REQ_SELECTED.has(p.id);
+    return `<button type="button" class="player-toggle${sel?' selected':''}"
+      onclick="togglePlayerSel('${p.id}')">
+      <span class="player-toggle-dot">${sel ? '✓' : ''}</span>
+      ${escHtml(p.name)}
+    </button>`;
+  }).join('');
+}
+
+function togglePlayerSel(playerId) {
+  if (REQ_SELECTED.has(playerId)) REQ_SELECTED.delete(playerId);
+  else REQ_SELECTED.add(playerId);
+  renderPlayerToggles();
+  updatePerPlayer();
+}
+
+function updatePerPlayer() {
+  const total = parseFloat(document.getElementById('req-total')?.value) || 0;
+  const count = REQ_SELECTED.size;
+  const perEl = document.getElementById('req-per-player');
+  if (perEl) perEl.textContent = count > 0 && total > 0 ? '£' + (total / count).toFixed(2) : '£—';
+}
+
+function toggleAllReqPlayers() {
+  if (REQ_SELECTED.size === ACC.players.length) REQ_SELECTED.clear();
+  else ACC.players.forEach(p => REQ_SELECTED.add(p.id));
+  renderPlayerToggles();
+  updatePerPlayer();
+}
+
+function renderKPIs() {
+  // Collected = ad-hoc payments + request collections
+  const reqCollected = ACC.requests.reduce((s, req) =>
+    s + req.players.filter(rp => rp.collected).reduce((ss, rp) => ss + (+rp.amount||0), 0), 0);
+  const totalIn  = ACC.payments.reduce((s,p) => s + (+p.amount||0), 0) + reqCollected;
+  const totalOut = ACC.expenses.reduce((s,e) => s + (+e.amount||0), 0);
+  const balance  = totalIn - totalOut;
+
+  // Paid = players who have any payment (ad-hoc or request)
+  const paidPlayerIds = new Set([
+    ...ACC.payments.map(p => p.playerId),
+    ...ACC.requests.flatMap(req => req.players.filter(rp => rp.collected).map(rp => rp.playerId))
+  ]);
+  const paidCount = ACC.players.filter(p => paidPlayerIds.has(p.id)).length;
+
+  document.getElementById('kpi-collected').textContent = '£'+totalIn.toFixed(2);
+  document.getElementById('kpi-spent').textContent     = '£'+totalOut.toFixed(2);
+  const balEl = document.getElementById('kpi-balance');
+  balEl.textContent = (balance < 0 ? '-£' : '£') + Math.abs(balance).toFixed(2);
+  balEl.className   = 'kpi-value ' + (balance >= 0 ? 'green' : 'red');
+  document.getElementById('kpi-players').textContent = paidCount + ' / ' + ACC.players.length;
+}
+
+/* ── Payment Requests ── */
+function createRequest() {
+  const category = document.getElementById('req-cat').value;
+  const total    = parseFloat(document.getElementById('req-total').value);
+  const desc     = document.getElementById('req-desc').value.trim();
+  const checked  = [...REQ_SELECTED];
+  if (!total || total <= 0) { showToast('Enter a total amount'); return; }
+  if (!desc) { showToast('Enter a description'); return; }
+  if (checked.length === 0) { showToast('Select at least one player'); return; }
+  const perPlayer = total / checked.length;
+  const req = {
+    id: uid(),
+    category, desc,
+    total,
+    createdDate: new Date().toISOString().slice(0,10),
+    players: checked.map(pid => ({
+      playerId: pid,
+      amount: perPlayer,
+      collected: false,
+      collectedDate: ''
+    }))
+  };
+  ACC.requests.push(req);
+  saveAcc();
+  document.getElementById('req-total').value = '';
+  document.getElementById('req-desc').value  = '';
+  REQ_SELECTED = new Set(ACC.players.map(p => p.id));
+  renderPlayerToggles();
+  updatePerPlayer();
+  renderAccounts();
+  showToast('Request created ✓');
+}
+
+function toggleCollection(reqId, playerId, checked, dateVal) {
+  const req = ACC.requests.find(r => r.id === reqId);
+  if (!req) return;
+  const rp = req.players.find(p => p.playerId === playerId);
+  if (!rp) return;
+  rp.collected = checked;
+  rp.collectedDate = checked ? (dateVal || new Date().toISOString().slice(0,10)) : '';
+  saveAcc();
+  renderAccounts();
+}
+
+function updateCollectionDate(reqId, playerId, dateVal) {
+  const req = ACC.requests.find(r => r.id === reqId);
+  if (!req) return;
+  const rp = req.players.find(p => p.playerId === playerId);
+  if (!rp) return;
+  rp.collectedDate = dateVal;
+  saveAcc();
+}
+
+function deleteRequest(reqId) {
+  ACC.requests = ACC.requests.filter(r => r.id !== reqId);
+  saveAcc(); renderAccounts();
+}
+
+function renderRequests() {
+  const open = ACC.requests.filter(r => !r.players.every(p => p.collected));
+  const done = ACC.requests.filter(r => r.players.length > 0 && r.players.every(p => p.collected));
+
+  const openEl = document.getElementById('requests-open');
+  const doneEl = document.getElementById('requests-done');
+  const doneTitle = document.getElementById('completed-title');
+
+  openEl.innerHTML = open.length === 0
+    ? '<div class="empty-state" style="padding:16px;font-size:13px;color:var(--muted);text-align:center">No outstanding requests.</div>'
+    : open.map(r => renderReqCard(r)).join('');
+
+  doneTitle.style.display = done.length > 0 ? '' : 'none';
+  doneEl.innerHTML = done.map(r => renderReqCard(r, true)).join('');
+}
+
+function renderReqCard(req, isComplete) {
+  const collected = req.players.filter(p => p.collected).length;
+  const total     = req.players.length;
+  const pct       = total > 0 ? Math.round((collected / total) * 100) : 0;
+  const today     = new Date().toISOString().slice(0,10);
+  const playerRows = req.players.map(rp => {
+    const player = ACC.players.find(p => p.id === rp.playerId);
+    const name   = player ? escHtml(player.name) : '—';
+    const nameClass = rp.collected ? 'req-player-name collected' : 'req-player-name';
+    const dateVal = rp.collectedDate || today;
+    return `<div class="req-player-row">
+      <input type="checkbox" ${rp.collected ? 'checked' : ''}
+        onchange="toggleCollection('${req.id}','${rp.playerId}',this.checked,this.closest('.req-player-row').querySelector('input[type=date]').value)"/>
+      <span class="${nameClass}">${name}</span>
+      <input type="date" value="${rp.collectedDate||''}" ${!rp.collected ? 'disabled' : ''}
+        placeholder="Date received"
+        onchange="updateCollectionDate('${req.id}','${rp.playerId}',this.value)"/>
+      <span style="font-size:12px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">£${(+rp.amount).toFixed(2)}</span>
+    </div>`;
+  }).join('');
+
+  return `<div class="req-card${isComplete?' complete':''}">
+    <div class="req-header">
+      <div>
+        <div class="req-title">${escHtml(req.desc)}</div>
+        <div class="req-meta">${escHtml(req.category)} · Created ${fmtShort(req.createdDate)}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="req-amount">${collected}/${total} · £${(+req.total).toFixed(2)}</span>
+        ${isComplete ? '<span class="complete-badge">Complete</span>' : ''}
+        <button class="del-row" onclick="deleteRequest('${req.id}')" title="Delete request">✕</button>
+      </div>
+    </div>
+    <div class="req-progress"><div class="req-progress-bar" style="width:${pct}%"></div></div>
+    <div class="req-players">${playerRows}</div>
+  </div>`;
+}
+
+function renderLedger() {
+  const tbody = document.getElementById('ledger-body');
+  // Build ledger rows: ad-hoc payments + request collections + expenses
+  const reqRows = ACC.requests.flatMap(req =>
+    req.players.filter(rp => rp.collected).map(rp => {
+      const player = ACC.players.find(p => p.id === rp.playerId);
+      return {
+        id: req.id + '-' + rp.playerId,
+        kind: 'payment',
+        date: rp.collectedDate,
+        playerId: rp.playerId,
+        playerName: player ? player.name : '—',
+        amount: rp.amount,
+        method: '',
+        note: escHtml(req.desc) + ' <span class="tag tag-cash" style="font-size:10px">' + escHtml(req.category) + '</span>',
+        isReqEntry: true
+      };
+    })
+  );
+  const adHocRows = ACC.payments.map(p => ({...p, kind:'payment', isReqEntry:false}));
+  const expRows   = ACC.expenses.map(e => ({...e, kind:'expense'}));
+  const rows = [...reqRows, ...adHocRows, ...expRows]
+    .sort((a,b) => (b.date||'').localeCompare(a.date||''));
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No transactions yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r => {
+    const dateStr = r.date ? fmtShort(r.date) : '—';
+    const isIn    = r.kind === 'payment';
+    const typeTag = isIn ? '<span class="tag tag-in">💰 In</span>' : '<span class="tag tag-out">💸 Out</span>';
+    let detail = '';
+    if (isIn) {
+      const player  = ACC.players.find(p => p.id === r.playerId);
+      const pName   = player ? player.name : r.playerName || '—';
+      const mTag    = !r.isReqEntry && r.method === 'Cash' ? '<span class="tag tag-cash">Cash</span>'
+                    : !r.isReqEntry && r.method === 'Bank Transfer' ? '<span class="tag tag-bank">Bank</span>' : '';
+      const noteStr = r.isReqEntry ? r.note : (r.note ? '· <span style="color:var(--muted);font-size:11px">'+escHtml(r.note)+'</span>' : '');
+      detail = escHtml(pName) + ' ' + noteStr + ' ' + mTag;
+    } else {
+      detail = '<strong>'+escHtml(r.category)+'</strong>'
+             + (r.description ? ' · <span style="color:var(--muted);font-size:11px">'+escHtml(r.description)+'</span>' : '');
+    }
+    const amtColor = isIn ? 'var(--success)' : 'var(--red)';
+    const amtStr   = (isIn ? '+' : '-') + '£' + (+r.amount).toFixed(2);
+    // Only show delete for ad-hoc payments and expenses (req entries deleted via request card)
+    const delBtn   = r.isReqEntry ? '' : `<button class="del-row" onclick="deleteEntry('${r.kind}','${r.id}')" title="Delete">✕</button>`;
+    return `<tr>
+      <td style="white-space:nowrap;color:var(--muted);font-size:12px">${dateStr}</td>
+      <td>${typeTag}</td>
+      <td>${detail}</td>
+      <td style="text-align:right;font-weight:600;font-family:'DM Mono',monospace;color:${amtColor};white-space:nowrap">${amtStr}</td>
+      <td>${delBtn}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderPlayerGrid() {
+  const grid = document.getElementById('player-grid');
+  if (!grid) return;
+  if (ACC.players.length === 0) { grid.innerHTML = '<div class="empty-state">No players added yet.</div>'; return; }
+  grid.innerHTML = ACC.players.map(p => {
+    const adHoc  = ACC.payments.filter(pay => pay.playerId === p.id).reduce((s,pay) => s+(+pay.amount||0), 0);
+    const reqAmt = ACC.requests.flatMap(r => r.players).filter(rp => rp.playerId === p.id && rp.collected).reduce((s,rp) => s+(+rp.amount||0), 0);
+    const total  = adHoc + reqAmt;
+    const paid   = total > 0;
+    const badge  = paid ? '<span class="badge-paid">Paid</span>' : '<span class="badge-unpaid">Unpaid</span>';
+    const allDates = [
+      ...ACC.payments.filter(pay => pay.playerId === p.id).map(pay => pay.date),
+      ...ACC.requests.flatMap(r => r.players).filter(rp => rp.playerId === p.id && rp.collected && rp.collectedDate).map(rp => rp.collectedDate)
+    ].sort().reverse();
+    const lastStr = allDates.length ? 'Last: ' + fmtShort(allDates[0]) : 'No payments yet';
+    return `<div class="player-row">
+      <div>
+        <div class="player-name">${escHtml(p.name)}</div>
+        <div class="player-meta">${lastStr}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="player-total ${paid?'paid':'unpaid'}">£${total.toFixed(2)}</div>
+        ${badge}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderManagePlayerGrid() {
+  const grid = document.getElementById('manage-player-grid');
+  if (!grid) return;
+  if (ACC.players.length === 0) { grid.innerHTML = '<div class="empty-state">No players yet.</div>'; return; }
+  grid.innerHTML = ACC.players.map(p =>
+    `<div class="player-row" id="mgrow-${p.id}">
+      <div style="display:flex;align-items:center;gap:8px;flex:1">
+        <span class="player-name-display" onclick="startEditPlayer('${p.id}')" title="Click to edit">${escHtml(p.name)}</span>
+      </div>
+      <button class="del-row" onclick="deletePlayer('${p.id}')" title="Remove">✕</button>
+    </div>`
+  ).join('');
+}
+
+function startEditPlayer(id) {
+  const row = document.getElementById('mgrow-' + id);
+  if (!row) return;
+  const player = ACC.players.find(p => p.id === id);
+  if (!player) return;
+  row.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap">
+      <input class="player-name-input" type="text" value="${escHtml(player.name)}" id="edit-input-${id}"
+        onkeydown="if(event.key==='Enter')savePlayerName('${id}');if(event.key==='Escape')renderManagePlayerGrid()"/>
+      <div class="player-edit-btns">
+        <button class="btn-save-name" onclick="savePlayerName('${id}')">Save</button>
+        <button class="btn-cancel-name" onclick="renderManagePlayerGrid()">Cancel</button>
+      </div>
+    </div>`;
+  document.getElementById('edit-input-' + id)?.focus();
+}
+
+function savePlayerName(id) {
+  const input = document.getElementById('edit-input-' + id);
+  const newName = input ? input.value.trim() : '';
+  if (!newName) { showToast('Name cannot be empty'); return; }
+  if (ACC.players.find(p => p.name.toLowerCase() === newName.toLowerCase() && p.id !== id)) {
+    showToast('Another player already has that name'); return;
+  }
+  const player = ACC.players.find(p => p.id === id);
+  if (player) { player.name = newName; saveAcc(); renderAccounts(); renderRequestPlayerChecks(); showToast('Name updated ✓'); }
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* Entry actions */
+function addPayment() {
+  const playerId = document.getElementById('pay-player').value;
+  const amount   = parseFloat(document.getElementById('pay-amount').value);
+  const date     = document.getElementById('pay-date').value;
+  const method   = document.getElementById('pay-method').value;
+  const note     = document.getElementById('pay-note').value.trim();
+  if (!playerId) { showToast('Please select a player'); return; }
+  if (!amount || amount <= 0) { showToast('Please enter a valid amount'); return; }
+  if (!date) { showToast('Please enter a date'); return; }
+  ACC.payments.push({ id: uid(), playerId, amount, date, method, note });
+  saveAcc();
+  document.getElementById('pay-amount').value = '';
+  document.getElementById('pay-note').value   = '';
+  renderAccounts();
+  showToast('Payment added ✓');
+}
+
+function addExpense() {
+  const category    = document.getElementById('exp-cat').value;
+  const amount      = parseFloat(document.getElementById('exp-amount').value);
+  const date        = document.getElementById('exp-date').value;
+  const description = document.getElementById('exp-desc').value.trim();
+  const ref         = document.getElementById('exp-ref').value.trim();
+  if (!amount || amount <= 0) { showToast('Please enter a valid amount'); return; }
+  if (!date) { showToast('Please enter a date'); return; }
+  ACC.expenses.push({ id: uid(), category, amount, date, description, ref });
+  saveAcc();
+  document.getElementById('exp-amount').value = '';
+  document.getElementById('exp-desc').value   = '';
+  document.getElementById('exp-ref').value    = '';
+  renderAccounts();
+  showToast('Expense added ✓');
+}
+
+function deleteEntry(kind, id) {
+  if (kind === 'payment') ACC.payments = ACC.payments.filter(p => p.id !== id);
+  else ACC.expenses = ACC.expenses.filter(e => e.id !== id);
+  saveAcc(); renderAccounts();
+}
+
+function addPlayer() {
+  const input = document.getElementById('new-player-name');
+  const name  = input.value.trim();
+  if (!name) { showToast('Enter a player name'); return; }
+  if (ACC.players.find(p => p.name.toLowerCase() === name.toLowerCase())) { showToast('Player already exists'); return; }
+  if (ACC.players.length >= 10) { showToast('Maximum 10 players'); return; }
+  ACC.players.push({ id: uid(), name });
+  saveAcc(); renderAccounts(); renderRequestPlayerChecks();
+  input.value = '';
+  showToast(name + ' added ✓');
+}
+
+function deletePlayer(id) {
+  ACC.players = ACC.players.filter(p => p.id !== id);
+  saveAcc(); renderAccounts(); renderRequestPlayerChecks();
+}
+
+/* Toast */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* Reset modal */
+function confirmAccReset() { document.getElementById('acc-reset-modal').classList.remove('hidden'); }
+function closeAccModal()    { document.getElementById('acc-reset-modal').classList.add('hidden'); }
+function doAccReset() {
+  exportExcel();
+  setTimeout(() => {
+    ACC = { players:[], payments:[], expenses:[], requests:[] };
+    saveAcc();
+    closeAccModal();
+    renderAccounts();
+    showToast('Accounts cleared — backup saved');
+  }, 400);
+}
+
+/* ════════════════════════════════════════════════════════
+   EXCEL EXPORT — SheetJS
+════════════════════════════════════════════════════════ */
+function exportExcel() {
+  const wb = XLSX.utils.book_new();
+
+  // Compute totals including requests
+  const reqCollected = ACC.requests.reduce((s, req) =>
+    s + req.players.filter(rp => rp.collected).reduce((ss, rp) => ss + (+rp.amount||0), 0), 0);
+  const totalIn  = ACC.payments.reduce((s,p) => s + (+p.amount||0), 0) + reqCollected;
+  const totalOut = ACC.expenses.reduce((s,e) => s + (+e.amount||0), 0);
+  const paidIds  = new Set([
+    ...ACC.payments.map(p => p.playerId),
+    ...ACC.requests.flatMap(r => r.players.filter(rp => rp.collected).map(rp => rp.playerId))
+  ]);
+  const paidCount = ACC.players.filter(p => paidIds.has(p.id)).length;
+
+  // ── Dashboard sheet ──
+  const dashData = [
+    ['Rugby Borough Tigers U7 — Team Accounts'],
+    [''],
+    ['Summary',''],
+    ['Total Collected', totalIn],
+    ['Total Spent', totalOut],
+    ['Balance', totalIn - totalOut],
+    ['Players Paid', paidCount + ' / ' + ACC.players.length],
+    [''],
+    ['Expense Breakdown by Category',''],
+    ['Category','Amount (£)'],
+  ];
+  const cats = ['Match Fees / Referees','Pitch Hire','Tournament Entry Fees','Training Kit / Equipment','Other'];
+  cats.forEach(cat => {
+    const total = ACC.expenses.filter(e => e.category === cat).reduce((s,e) => s + (+e.amount||0), 0);
+    dashData.push([cat, total]);
+  });
+  const wsDash = XLSX.utils.aoa_to_sheet(dashData);
+  XLSX.utils.book_append_sheet(wb, wsDash, 'Dashboard');
+
+  // ── Payment Requests sheet ──
+  const reqHeaders = ['Created','Category','Description','Total (£)','Player','Per Player (£)','Collected','Date Collected'];
+  const reqRows = ACC.requests.flatMap(req =>
+    req.players.map(rp => {
+      const player = ACC.players.find(p => p.id === rp.playerId);
+      return [ req.createdDate, req.category, req.desc, +req.total,
+               player ? player.name : '—', +rp.amount,
+               rp.collected ? 'Yes' : 'No', rp.collectedDate || '' ];
+    })
+  );
+  const wsReq = XLSX.utils.aoa_to_sheet([reqHeaders, ...reqRows]);
+  XLSX.utils.book_append_sheet(wb, wsReq, 'Payment Requests');
+
+  // ── Ad-hoc Payments sheet ──
+  const payHeaders = ['Date','Player','Amount (£)','Method','Note'];
+  const payRows = ACC.payments
+    .sort((a,b) => (b.date||'').localeCompare(a.date||''))
+    .map(p => {
+      const player = ACC.players.find(pl => pl.id === p.playerId);
+      return [ p.date, player ? player.name : '—', +p.amount, p.method, p.note||'' ];
+    });
+  const wsPay = XLSX.utils.aoa_to_sheet([payHeaders, ...payRows]);
+  XLSX.utils.book_append_sheet(wb, wsPay, 'Ad-hoc Payments');
+
+  // ── Expenses sheet ──
+  const expHeaders = ['Date','Category','Amount (£)','Description','Receipt/Ref'];
+  const expRows = ACC.expenses
+    .sort((a,b) => (b.date||'').localeCompare(a.date||''))
+    .map(e => [ e.date, e.category, +e.amount, e.description||'', e.ref||'' ]);
+  const wsExp = XLSX.utils.aoa_to_sheet([expHeaders, ...expRows]);
+  XLSX.utils.book_append_sheet(wb, wsExp, 'Expenses');
+
+  // ── Player Tracker sheet ──
+  const ptHeaders = ['Player','Total Paid (£)','Status','Last Payment'];
+  const ptRows = ACC.players.map(p => {
+    const adHoc  = ACC.payments.filter(pay => pay.playerId === p.id);
+    const reqPays = ACC.requests.flatMap(r => r.players).filter(rp => rp.playerId === p.id && rp.collected);
+    const total  = adHoc.reduce((s,pay) => s+(+pay.amount||0), 0) + reqPays.reduce((s,rp) => s+(+rp.amount||0), 0);
+    const allDates = [
+      ...adHoc.map(pay => pay.date),
+      ...reqPays.map(rp => rp.collectedDate)
+    ].filter(Boolean).sort().reverse();
+    return [ p.name, total, total > 0 ? 'Paid' : 'Unpaid', allDates[0] || '' ];
+  });
+  const wsPT = XLSX.utils.aoa_to_sheet([ptHeaders, ...ptRows]);
+  XLSX.utils.book_append_sheet(wb, wsPT, 'Player Tracker');
+
+  const today = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, 'Tigers_Accounts_' + today + '.xlsx');
+}
+</script>
+</body>
+</html>
